@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mavidunya - Ayarlar</title>
+<style>
+body{font-family:Arial,sans-serif;background:linear-gradient(135deg,#1e3c72,#2a5298);color:#fff;display:flex;justify-content:center;align-items:center;min-height:100vh;margin:0;padding:20px}
+.card{background:rgba(255,255,255,0.1);padding:30px;border-radius:20px;max-width:500px;width:100%}
+h1{text-align:center;font-size:1.8em;margin-bottom:20px}
+label{display:block;margin-bottom:5px;margin-top:15px;font-size:0.9em;opacity:0.9}
+input{width:100%;padding:12px;border-radius:10px;border:none;font-size:1em;box-sizing:border-box;background:rgba(255,255,255,0.95);color:#000}
+button{width:100%;padding:14px;border-radius:10px;border:none;background:#4ade80;color:#064e3b;font-weight:bold;font-size:1.1em;cursor:pointer;margin-top:25px}
+button:hover{background:#22c55e}
+.geri{background:#64748b;color:#fff;margin-top:10px}
+.geri:hover{background:#475569}
+.mesaj{background:#4ade80;color:#064e3b;padding:10px;border-radius:10px;margin-top:15px;text-align:center;display:none;font-weight:bold}
+.hata{background:#ef4444;color:#fff;padding:10px;border-radius:10px;margin-top:15px;text-align:center;display:none}
+</style>
+</head>
+<body>
+<div class="card">
+<h1>⚙️ Ayarlar</h1>
+<div id="mesaj" class="mesaj">Kaydedildi!</div>
+<div id="hata" class="hata"></div>
+
+<label>🎯 Hedef Kazanç (TL)</label>
+<input type="number" id="hedef" placeholder="Örn: 1500000">
+
+<label>💰 Ana Kasa (TL)</label>
+<input type="number" id="ana_kasa" placeholder="Örn: 5000">
+
+<label>🔒 Yedek Kasa (TL)</label>
+<input type="number" id="yedek_kasa" placeholder="Örn: 1500">
+
+<label>⚡ Aktif Rolling (TL)</label>
+<input type="number" id="aktif_rolling" placeholder="Örn: 1000">
+
+<label>🔐 Kilitli Kâr (TL)</label>
+<input type="number" id="kilitli_kar" placeholder="Örn: 0">
+
+<button onclick="kaydet()">💾 Kaydet</button>
+<button class="geri" onclick="window.location.href='index.html'">← Geri Dön</button>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+const SUPABASE_URL = "https://bwdoiltmkrqfxqknedih.supabase.co";
+const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ3ZG9pbHRta3JxZnhxa25lZGloIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA0NTkzNjcsImV4cCI6MjEwNjAzNTM2N30.mx1O66LItD6Q6ED1Z75YzGXW7ijSDUVAl9R2df4Km8o";
+const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+async function yukle() {
+  const { data: { session } } = await client.auth.getSession();
+  if (!session) { window.location.href = "login.html"; return; }
+
+  const { data, error } = await client.from("ayarlar").select("*").eq("id", 1).single();
+  if (error) { gosterHata("Yükleme hatası: " + error.message); return; }
+  if (data) {
+    document.getElementById("hedef").value = data.hedef || 0;
+    document.getElementById("ana_kasa").value = data.ana_kasa || 0;
+    document.getElementById("yedek_kasa").value = data.yedek_kasa || 0;
+    document.getElementById("aktif_rolling").value = data.aktif_rolling || 0;
+    document.getElementById("kilitli_kar").value = data.kilitli_kar || 0;
+  }
+}
+
+async function kaydet() {
+  const hedef = parseFloat(document.getElementById("hedef").value) || 0;
+  const ana_kasa = parseFloat(document.getElementById("ana_kasa").value) || 0;
+  const yedek_kasa = parseFloat(document.getElementById("yedek_kasa").value) || 0;
+  const aktif_rolling = parseFloat(document.getElementById("aktif_rolling").value) || 0;
+  const kilitli_kar = parseFloat(document.getElementById("kilitli_kar").value) || 0;
+
+  const { error } = await client.from("ayarlar").update({
+    hedef: hedef,
+    ana_kasa: ana_kasa,
+    yedek_kasa: yedek_kasa,
+    aktif_rolling: aktif_rolling,
+    kilitli_kar: kilitli_kar,
+    updated_at: new Date().toISOString()
+  }).eq("id", 1);
+
+  if (error) { gosterHata("Kaydetme hatası: " + error.message); return; }
+  document.getElementById("mesaj").style.display = "block";
+  setTimeout(() => { document.getElementById("mesaj").style.display = "none"; }, 2000);
+}
+
+function gosterHata(msg) {
+  const el = document.getElementById("hata");
+  el.textContent = msg;
+  el.style.display = "block";
+  setTimeout(() => { el.style.display = "none"; }, 5000);
+}
+
+yukle();
+</script>
+</body>
+</html>
