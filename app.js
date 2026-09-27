@@ -1,5 +1,5 @@
-const SUPABASE_URL = "https://supabase.com/dashboard/project/bwdoiltmkrqfxqknedih";
-const SUPABASE_KEY = "sb_publishable_CLFNEIDYCLTMiHOQ1onzmg_EEwz5_UF";
+const SUPABASE_URL = "https://bwdoiltmkrqfxqknedih.supabase.co";
+const SUPABASE_KEY = "const SUPABASE_KEY = "sb_publishable_CLFNE...";
 
 async function testConnection() {
   try {
