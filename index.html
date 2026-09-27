@@ -15,9 +15,32 @@ p{font-size:1.1em;opacity:0.9}
 <body>
 <div class="card">
 <h1>🌊 Mavidunya</h1>
-<p>Futbol analiz ve rolling takip sistemi</p>
+<p id="hosgeldin">Yükleniyor...</p>
 <div class="badge">✅ Sistem çalışıyor</div>
+<button onclick="cikisYap()" style="margin-top:20px;padding:10px 20px;border-radius:10px;border:none;background:#ef4444;color:#fff;font-weight:bold;cursor:pointer">Çıkış Yap</button>
 </div>
-<script src="app.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+const SUPABASE_URL = "https://bwdoiltmkrqfxqknedih.supabase.co";
+const SUPABASE_KEY = "sb_publishable_CLFNEIDYCLTMIHOQ1onzmq_EEwz5_UF";
+const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+async function kontrol() {
+  const { data: { session } } = await client.auth.getSession();
+  if (!session) {
+    window.location.href = "login.html";
+    return;
+  }
+  const email = session.user.email;
+  document.getElementById("hosgeldin").textContent = "Hoş geldin, " + email;
+}
+
+async function cikisYap() {
+  await client.auth.signOut();
+  window.location.href = "login.html";
+}
+
+kontrol();
+</script>
 </body>
 </html>
