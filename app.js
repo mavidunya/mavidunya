@@ -1,5 +1,5 @@
 const SUPABASE_URL = "https://bwdoiltmkrqfxqknedih.supabase.co";
-const SUPABASE_KEY = "const SUPABASE_KEY = "sb_publishable_CLFNE...";
+const SUPABASE_KEY = "sb_publishable_CLFNEIDYCLTMIHOQ1onzmq_EEwz5_UF";
 
 async function testConnection() {
   try {
@@ -9,9 +9,9 @@ async function testConnection() {
         "Authorization": "Bearer " + SUPABASE_KEY
       }
     });
-    if (!response.ok) throw new Error("Bağlantı hatası: " + response.status);
+    if (!response.ok) throw new Error("Baglanti hatasi: " + response.status);
     const data = await response.json();
-    console.log("Bağlantı başarılı! Kullanıcılar:", data);
+    console.log("Baglanti basarili! Kullanicilar:", data);
     return data;
   } catch (error) {
     console.error("Hata:", error);
