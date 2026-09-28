@@ -40,6 +40,8 @@ button:hover{background:#22c55e}
 <input type="number" id="kilitli_kar" placeholder="Örn: 0">
 <label>📉 Kayıp Sonrası Yeni Seri Oranı (%)</label>
 <input type="number" id="kayip_sonrasi_oran" placeholder="Örn: 25">
+<label>💰 Kârdan Kilitli Kâra Aktarım Oranı (%)</label>
+<input type="number" id="kar_kilitli_oran" placeholder="Örn: 25">
 <button onclick="kaydet()">💾 Kaydet</button>
 <button class="geri" onclick="window.location.href='index.html'">← Geri Dön</button>
 </div>
@@ -63,6 +65,7 @@ async function yukle() {
     document.getElementById("aktif_rolling").value = data.aktif_rolling || 0;
     document.getElementById("kilitli_kar").value = data.kilitli_kar || 0;
 document.getElementById("kayip_sonrasi_oran").value = data.kayip_sonrasi_oran || 25;
+document.getElementById("kar_kilitli_oran").value = data.kar_kilitli_oran || 25;
   }
 }
 
@@ -73,7 +76,7 @@ async function kaydet() {
   const aktif_rolling = parseFloat(document.getElementById("aktif_rolling").value) || 0;
   const kilitli_kar = parseFloat(document.getElementById("kilitli_kar").value) || 0;
 const kayip_sonrasi_oran = parseFloat(document.getElementById("kayip_sonrasi_oran").value) || 25;
-  
+const kar_kilitli_oran = parseFloat(document.getElementById("kar_kilitli_oran").value) || 25;  
   const { error } = await client.from("ayarlar").update({
     hedef: hedef,
     ana_kasa: ana_kasa,
@@ -81,6 +84,7 @@ const kayip_sonrasi_oran = parseFloat(document.getElementById("kayip_sonrasi_ora
     aktif_rolling: aktif_rolling,
     kilitli_kar: kilitli_kar,
     kayip_sonrasi_oran: kayip_sonrasi_oran,
+   kar_kilitli_oran: kar_kilitli_oran,
     updated_at: new Date().toISOString()
   }).eq("id", 1);
 
