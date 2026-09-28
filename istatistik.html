@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mavidunya - İstatistikler</title>
+<style>
+body{font-family:Arial,sans-serif;background:linear-gradient(135deg,#1e3c72,#2a5298);color:#fff;margin:0;padding:15px;min-height:100vh}
+.kapsayici{max-width:600px;margin:0 auto}
+h1{font-size:1.6em;text-align:center;margin:10px 0}
+.geri{background:rgba(255,255,255,0.15);color:#fff;border:none;padding:8px 15px;border-radius:8px;font-size:0.9em;cursor:pointer;margin-bottom:10px}
+.bolum{background:rgba(255,255,255,0.08);padding:15px;border-radius:15px;margin-bottom:15px}
+.bolum h2{font-size:1.1em;margin:0 0 12px 0;opacity:0.95}
+.ozet-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.ozet-kutu{background:rgba(255,255,255,0.08);padding:12px;border-radius:10px;text-align:center}
+.ozet-kutu .baslik{font-size:0.8em;opacity:0.8;margin-bottom:4px}
+.ozet-kutu .deger{font-size:1.1em;font-weight:bold}
+.yesil{color:#4ade80}
+.kirmizi{color:#ef4444}
+.mavi{color:#3b82f6}
+label{display:block;font-size:0.85em;opacity:0.85;margin:8px 0 4px 0}
+input,select{width:100%;padding:10px;border-radius:8px;border:none;font-size:1em;box-sizing:border-box;background:rgba(255,255,255,0.95);color:#000}
+.buton{width:100%;padding:12px;border-radius:10px;border:none;font-weight:bold;font-size:1em;cursor:pointer;margin-top:10px}
+.btn-mavi{background:#3b82f6;color:#fff}
+.btn-mavi:hover{background:#2563eb}
+.btn-gri{background:#64748b;color:#fff}
+.btn-gri:hover{background:#475569}
+.satir{background:rgba(255,255,255,0.06);padding:10px;border-radius:10px;margin-bottom:6px;font-size:0.85em;display:flex;justify-content:space-between;align-items:center}
+.satir .isim{font-weight:bold}
+.satir .istatistik{text-align:right;font-size:0.9em}
+.hata{background:#fbbf24;color:#000;padding:10px;border-radius:10px;margin-top:10px;font-size:0.85em;display:none;word-break:break-word}
+.bos{opacity:0.6;text-align:center;padding:15px;font-size:0.9em}
+</style>
+</head>
+<body>
+<div class="kapsayici">
+
+<button class="geri" onclick="window.location.href='index.html'">← Ana Sayfa</button>
+<h1>📊 İstatistikler</h1>
+<div id="debug" class="hata"></div>
+
+<!-- FİLTRELER -->
+<div class="bolum">
+<h2>🔍 Filtreler</h2>
+
+<label>Tarih Aralığı</label>
+<select id="filtreTarih">
+<option value="tumu">Tümü</option>
+<option value="hafta">Bu Hafta</option>
+<option value="ay">Bu Ay</option>
+</select>
+
+<label>Kategori</label>
+<select id="filtreKategori">
+<option value="tumu">Tümü</option>
+<option value="mac_sonucu">⚽ Maç Sonucu</option>
+<option value="gol">🥅 Gol</option>
+<option value="ilk_ikinci_yari">⏱️ İlk/İkinci Yarı</option>
+<option value="takim_bazli">🏆 Takım Bazlı</option>
+<option value="korner">🚩 Korner</option>
+<option value="kart">🟨 Kart</option>
+<option value="zaman_bazli">⏰ Zaman Bazlı Gol</option>
+<option value="ozel_oyuncu">🎯 Özel / Oyuncu</option>
+<option value="toplam_istatistik">📊 Toplam İstatistik</option>
+<option value="turnuva">🏆 Turnuva/Kupa</option>
+<option value="diger">📌 Diğer</option>
+</select>
+
+<label>Kişi</label>
+<select id="filtreKisi">
+<option value="tumu">Tümü</option>
+<option value="hasan">🔵 Hasan</option>
+<option value="hakan">🟢 Hakan</option>
+</select>
+
+<button class="buton btn-mavi" onclick="filtrele()">🔍 Filtrele</button>
+<button class="buton btn-gri" onclick="filtreleriTemizle()">🔄 Temizle</button>
+</div>
+
+<!-- GENEL ÖZET -->
+<div class="bolum">
+<h2>📈 Genel Özet</h2>
+<div class="ozet-grid">
+<div class="ozet-kutu"><div class="baslik">Toplam Bahis</div><div class="deger" id="toplamBahis">0</div></div>
+<div class="ozet-kutu"><div class="baslik">Kazanan</div><div class="deger yesil" id="kazanan">0</div></div>
+<div class="ozet-kutu"><div class="baslik">Kaybeden</div><div class="deger kirmizi" id="kaybeden">0</div></div>
+<div class="ozet-kutu"><div class="baslik">İsabet Oranı</div><div class="deger mavi" id="isabet">%0</div></div>
+<div class="ozet-kutu"><div class="baslik">Toplam Kâr/Zarar</div><div class="deger" id="karZarar">0 TL</div></div>
+<div class="ozet-kutu"><div class="baslik">Ort. Oran</div><div class="deger" id="ortOran">0</div></div>
+</div>
+</div>
+
+<!-- KİŞİ BAZLI -->
+<div class="bolum">
+<h2>👥 Kişi Bazlı</h2>
+<div id="kisiBazli"><div class="bos">Yükleniyor...</div></div>
+</div>
+
+<!-- KATEGORİ BAZLI -->
+<div class="bolum">
+<h2>📂 Kategori Bazlı</h2>
+<div id="kategoriBazli"><div class="bos">Yükleniyor...</div></div>
+</div>
+
+<!-- ALT MARKET BAZLI -->
+<div class="bolum">
+<h2>🎯 Alt Market Bazlı</h2>
+<div id="altMarketBazli"><div class="bos">Yükleniyor...</div></div>
+</div>
+
+<!-- SERİ BAZLI -->
+<div class="bolum">
+<h2>🔗 Seri Bazlı</h2>
+<div class="ozet-grid">
+<div class="ozet-kutu"><div class="baslik">Toplam Seri</div><div class="deger" id="toplamSeri">0</div></div>
+<div class="ozet-kutu"><div class="baslik">Başarılı Seri</div><div class="deger yesil" id="basariSeri">0</div></div>
+<div class="ozet-kutu"><div class="baslik">Kırılan Seri</div><div class="deger kirmizi" id="kirilanSeri">0</div></div>
+<div class="ozet-kutu"><div class="baslik">Ort. Adım</div><div class="deger" id="ortAdim">0</div></div>
+</div>
+</div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+const SUPABASE_URL = "https://bwdoiltmkrqfxqknedih.supabase.co";
+const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ3ZG9pbHRta3JxZnhxa25lZGloIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA0NTkzNjcsImV4cCI6MjEwNjAzNTM2N30.mx1O66LItD6Q6ED1Z75YzGXW7ijSDUVAl9R2df4Km8o";
+const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+let tumVeri = [];
+let mevcutFiltreler = { tarih: "tumu", kategori: "tumu", kisi: "tumu" };
+
+function tlFormat(n) {
+  return new Intl.NumberFormat('tr-TR', {maximumFractionDigits: 2}).format(n) + " TL";
+}
+
+function hataGoster(m) {
+  const el = document.getElementById("debug");
+  el.style.display = "block";
+  el.textContent = "DEBUG: " + m;
+  setTimeout(() => { el.style.display = "none"; }, 8000);
+}
+
+async function kontrol() {
+  const { data: { session } } = await client.auth.getSession();
+  if (!session) { window.location.href = "login.html"; return; }
+  await veriYukle();
+  hesapla();
+}
+
+async function veriYukle() {
+  const { data, error } = await client.from("bankroll")
+    .select("*")
+    .in("bahis_durumu", ["kazandi", "kaybetti"])
+    .order("created_at", { ascending: false });
+
+  if (error) { hataGoster("Veri yükleme: " + error.message); return; }
+  tumVeri = data || [];
+}
+
+function filtrele() {
+  mevcutFiltreler.tarih = document.getElementById("filtreTarih").value;
+  mevcutFiltreler.kategori = document.getElementById("filtreKategori").value;
+  mevcutFiltreler.kisi = document.getElementById("filtreKisi").value;
+  hesapla();
+}
+
+function filtreleriTemizle() {
+  document.getElementById("filtreTarih").value = "tumu";
+  document.getElementById("filtreKategori").value = "tumu";
+  document.getElementById("filtreKisi").value = "tumu";
+  mevcutFiltreler = { tarih: "tumu", kategori: "tumu", kisi: "tumu" };
+  hesapla();
+}
+
+function filtreUygula(veri) {
+  let sonuc = veri.slice();
+
+  if (mevcutFiltreler.tarih === "hafta") {
+    const birHaftaOnce = new Date();
+    birHaftaOnce.setDate(birHaftaOnce.getDate() - 7);
+    sonuc = sonuc.filter(k => new Date(k.created_at) >= birHaftaOnce);
+  } else if (mevcutFiltreler.tarih === "ay") {
+    const birAyOnce = new Date();
+    birAyOnce.setMonth(birAyOnce.getMonth() - 1);
+    sonuc = sonuc.filter(k => new Date(k.created_at) >= birAyOnce);
+  }
+
+  if (mevcutFiltreler.kategori !== "tumu") {
+    sonuc = sonuc.filter(k => k.market_kategori === mevcutFiltreler.kategori);
+  }
+
+  if (mevcutFiltreler.kisi !== "tumu") {
+    sonuc = sonuc.filter(k => {
+      if (mevcutFiltreler.kisi === "hasan") return k.created_by === "f1cda61e-e565-42c8-9fd9-63870b6dd3fc";
+      if (mevcutFiltreler.kisi === "hakan") return k.created_by === "37a5f741-d54d-46c4-b046-3198dbd05bb9";
+      return true;
+    });
+  }
+
+  return sonuc;
+}
+
+function hesapla() {
+  const veri = filtreUygula(tumVeri);
+
+  const toplam = veri.length;
+  const kazanan = veri.filter(k => k.bahis_durumu === "kazandi").length;
+  const kaybeden = veri.filter(k => k.bahis_durumu === "kaybetti").length;
+  const isabet = toplam > 0 ? ((kazanan / toplam) * 100).toFixed(1) : 0;
+
+  let karZarar = 0;
+  let oranToplam = 0;
+  veri.forEach(k => {
+    const tutar = Math.abs(parseFloat(k.amount) || 0);
+    const oran = parseFloat(k.oran) || 0;
+    if (k.bahis_durumu === "kazandi") karZarar += (tutar * oran) - tutar;
+    else if (k.bahis_durumu === "kaybetti") karZarar -= tutar;
+    oranToplam += oran;
+  });
+  const ortOran = toplam > 0 ? (oranToplam / toplam).toFixed(2) : 0;
+
+  document.getElementById("toplamBahis").textContent = toplam;
+  document.getElementById("kazanan").textContent = kazanan;
+  document.getElementById("kaybeden").textContent = kaybeden;
+  document.getElementById("isabet").textContent = "%" + isabet;
+  document.getElementById("karZarar").textContent = tlFormat(karZarar);
+  document.getElementById("karZarar").className = "deger " + (karZarar >= 0 ? "yesil" : "kirmizi");
+  document.getElementById("ortOran").textContent = ortOran;
+
+  kisiBazliHesapla(veri);
+  kategoriBazliHesapla(veri);
+  altMarketBazliHesapla(veri);
+  seriBazliHesapla();
+}
+
+function kisiBazliHesapla(veri) {
+  const hasanId = "f1cda61e-e565-42c8-9fd9-63870b6dd3fc";
+  const hakanId = "37a5f741-d54d-46c4-b046-3198dbd05bb9";
+
+  const kisiler = [
+    { isim: "🔵 Hasan", id: hasanId },
+    { isim: "🟢 Hakan", id: hakanId }
+  ];
+
+  const html = kisiler.map(kisi => {
+    const kisiVeri = veri.filter(k => k.created_by === kisi.id);
+    const toplam = kisiVeri.length;
+    const kazanan = kisiVeri.filter(k => k.bahis_durumu === "kazandi").length;
+    const isabet = toplam > 0 ? ((kazanan / toplam) * 100).toFixed(1) : 0;
+    let karZarar = 0;
+    kisiVeri.forEach(k => {
+      const tutar = Math.abs(parseFloat(k.amount) || 0);
+      const oran = parseFloat(k.oran) || 0;
+      if (k.bahis_durumu === "kazandi") karZarar += (tutar * oran) - tutar;
+      else karZarar -= tutar;
+    });
+    return '<div class="satir">' +
+      '<span class="isim">' + kisi.isim + '</span>' +
+      '<span class="istatistik">' + toplam + ' bahis | %' + isabet + ' | ' + tlFormat(karZarar) + '</span>' +
+      '</div>';
+  }).join("");
+
+  document.getElementById("kisiBazli").innerHTML = html || '<div class="bos">Veri yok.</div>';
+}
+
+function kategoriBazliHesapla(veri) {
+  const kategoriler = {};
+  veri.forEach(k => {
+    const kat = k.market_kategori || "belirsiz";
+    if (!kategoriler[kat]) kategoriler[kat] = { toplam: 0, kazanan: 0 };
+    kategoriler[kat].toplam++;
+    if (k.bahis_durumu === "kazandi") kategoriler[kat].kazanan++;
+  });
+
+  const isimler = {
+    "mac_sonucu": "⚽ Maç Sonucu",
+    "gol": "🥅 Gol",
+    "ilk_ikinci_yari": "⏱️ İlk/İkinci Yarı",
+    "takim_bazli": "🏆 Takım Bazlı",
+    "korner": "🚩 Korner",
+    "kart": "🟨 Kart",
+    "zaman_bazli": "⏰ Zaman Bazlı Gol",
+    "ozel_oyuncu": "🎯 Özel / Oyuncu",
+    "toplam_istatistik": "📊 Toplam İstatistik",
+    "turnuva": "🏆 Turnuva/Kupa",
+    "diger": "📌 Diğer",
+    "belirsiz": "❓ Belirsiz"
+  };
+
+  const html = Object.keys(kategoriler).map(kat => {
+    const d = kategoriler[kat];
+    const isabet = d.toplam > 0 ? ((d.kazanan / d.toplam) * 100).toFixed(1) : 0;
+    return '<div class="satir">' +
+      '<span class="isim">' + (isimler[kat] || kat) + '</span>' +
+      '<span class="istatistik">' + d.toplam + ' bahis | %' + isabet + '</span>' +
+      '</div>';
+  }).join("");
+
+  document.getElementById("kategoriBazli").innerHTML = html || '<div class="bos">Veri yok.</div>';
+}
+
+function altMarketBazliHesapla(veri) {
+  const marketler = {};
+  veri.forEach(k => {
+    const m = k.market || "belirsiz";
+    if (!marketler[m]) marketler[m] = { toplam: 0, kazanan: 0 };
+    marketler[m].toplam++;
+    if (k.bahis_durumu === "kazandi") marketler[m].kazanan++;
+  });
+
+  const html = Object.keys(marketler).map(m => {
+    const d = marketler[m];
+    const isabet = d.toplam > 0 ? ((d.kazanan / d.toplam) * 100).toFixed(1) : 0;
+    return '<div class="satir">' +
+      '<span class="isim">' + m + '</span>' +
+      '<span class="istatistik">' + d.toplam + ' bahis | %' + isabet + '</span>' +
+      '</div>';
+  }).join("");
+
+  document.getElementById("altMarketBazli").innerHTML = html || '<div class="bos">Veri yok.</div>';
+}
+
+function seriBazliHesapla() {
+  const seriler = {};
+  tumVeri.forEach(k => {
+    if (!k.seri_no) return;
+    if (!seriler[k.seri_no]) seriler[k.seri_no] = { durum: k.seri_durumu, adimlar: 0 };
+    seriler[k.seri_no].adimlar++;
+  });
+
+  const toplamSeri = Object.keys(seriler).length;
+  const basarili = Object.values(seriler).filter(s => s.durum === "tamamlandi").length;
+  const kirilan = Object.values(seriler).filter(s => s.durum === "devam_ediyor").length;
+
+  let toplamAdim = 0;
+  Object.values(seriler).forEach(s => { toplamAdim += s.adimlar; });
+  const ortAdim = toplamSeri > 0 ? (toplamAdim / toplamSeri).toFixed(1) : 0;
+
+  document.getElementById("toplamSeri").textContent = toplamSeri;
+  document.getElementById("basariSeri").textContent = basarili;
+  document.getElementById("kirilanSeri").textContent = kirilan;
+  document.getElementById("ortAdim").textContent = ortAdim;
+}
+
+kontrol();
+</script>
+</body>
+</html>
