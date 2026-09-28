@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mavidunya - AI Tahmin</title>
+<style>
+body{font-family:Arial,sans-serif;background:linear-gradient(135deg,#1e3c72,#2a5298);color:#fff;margin:0;padding:15px;min-height:100vh}
+.kapsayici{max-width:600px;margin:0 auto}
+h1{font-size:1.6em;text-align:center;margin:10px 0}
+.geri{background:rgba(255,255,255,0.15);color:#fff;border:none;padding:8px 15px;border-radius:8px;font-size:0.9em;cursor:pointer;margin-bottom:10px}
+.bolum{background:rgba(255,255,255,0.08);padding:15px;border-radius:15px;margin-bottom:15px}
+.bolum h2{font-size:1.1em;margin:0 0 12px 0;opacity:0.95}
+label{display:block;font-size:0.85em;opacity:0.85;margin:8px 0 4px 0}
+input,select,textarea{width:100%;padding:10px;border-radius:8px;border:none;font-size:1em;box-sizing:border-box;background:rgba(255,255,255,0.95);color:#000}
+.buton{width:100%;padding:12px;border-radius:10px;border:none;font-weight:bold;font-size:1em;cursor:pointer;margin-top:10px}
+.btn-mavi{background:#3b82f6;color:#fff}
+.btn-mavi:hover{background:#2563eb}
+.btn-yesil{background:#4ade80;color:#064e3b}
+.btn-yesil:hover{background:#22c55e}
+.btn-gri{background:#64748b;color:#fff}
+.btn-gri:hover{background:#475569}
+.btn-mor{background:#8b5cf6;color:#fff}
+.btn-mor:hover{background:#7c3aed}
+.hata{background:#fbbf24;color:#000;padding:10px;border-radius:10px;margin-top:10px;font-size:0.85em;display:none;word-break:break-word}
+.basari{background:#4ade80;color:#064e3b;padding:10px;border-radius:10px;margin-top:10px;font-size:0.85em;display:none;text-align:center;font-weight:bold}
+.ai-kart{background:rgba(255,255,255,0.08);padding:12px;border-radius:10px;margin-bottom:10px;border-left:4px solid #8b5cf6}
+.ai-kart h3{font-size:0.95em;margin:0 0 8px 0;opacity:0.9}
+.ai-kart p{margin:4px 0;font-size:0.9em}
+.ai-kart .etiket{display:inline-block;background:#8b5cf6;color:#fff;padding:2px 8px;border-radius:10px;font-size:0.75em;margin-right:5px}
+.yukleniyor{text-align:center;padding:15px;font-size:0.9em;opacity:0.8}
+.bos{opacity:0.6;text-align:center;padding:15px;font-size:0.9em}
+.tahmin-satir{background:rgba(255,255,255,0.06);padding:10px;border-radius:10px;margin-bottom:8px;font-size:0.85em}
+.tahmin-satir .mac{font-weight:bold}
+.tahmin-satir .model{font-size:0.75em;opacity:0.7;margin-top:4px}
+.tahmin-satir .piyasa{color:#4ade80;font-weight:bold}
+.spinner{display:inline-block;width:20px;height:20px;border:3px solid rgba(255,255,255,0.3);border-top-color:#fff;border-radius:50%;animation:spin 0.8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+<div class="kapsayici">
+
+<button class="geri" onclick="window.location.href='index.html'">← Ana Sayfa</button>
+<h1>🤖 AI Tahmin</h1>
+<div id="debug" class="hata"></div>
+<div id="basari" class="basari"></div>
+
+<!-- YENİ TAHMİN -->
+<div class="bolum">
+<h2>🎯 Yeni Tahmin</h2>
+<label>Ev Sahibi Takım</label>
+<input type="text" id="evSahibi" placeholder="Örn: Juventus">
+<label>Deplasman Takımı</label>
+<input type="text" id="deplasman" placeholder="Örn: Parma">
+<label>Lig</label>
+<input type="text" id="lig" placeholder="Örn: Serie A">
+<label>Ekstra Bilgi (opsiyonel)</label>
+<textarea id="ekstraBilgi" rows="3" placeholder="Örn: Sakat oyuncular, hava durumu, form durumu..."></textarea>
+<button class="buton btn-mor" onclick="tahminUret()" id="tahminBtn">🤖 Tahmin Üret (Gemini + Groq)</button>
+</div>
+
+<!-- AI SONUÇLARI -->
+<div class="bolum" id="sonucBolum" style="display:none">
+<h2>📊 AI Sonuçları</h2>
+<div id="aiSonuclar"></div>
+<button class="buton btn-yesil" onclick="tahminKaydet()">💾 Tahminleri Kaydet</button>
+</div>
+
+<!-- GEÇMİŞ -->
+<div class="bolum">
+<h2>📜 Son Tahminler</h2>
+<div id="tahminGecmis">Yükleniyor...</div>
+</div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+const SUPABASE_URL = "https://bwdoiltmkrqfxqknedih.supabase.co";
+const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ3ZG9pbHRta3JxZnhxa25lZGloIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA0NTkzNjcsImV4cCI6MjEwNjAzNTM2N30.mx1O66LItD6Q6ED1Z75YzGXW7ijSDUVAl9R2df4Km8o";
+const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+let mevcutTahminler = [];
+let mevcutMac = {};
+
+function hataGoster(m) {
+  const el = document.getElementById("debug");
+  el.style.display = "block";
+  el.textContent = "DEBUG: " + m;
+  setTimeout(() => { el.style.display = "none"; }, 10000);
+}
+
+function basariGoster(m) {
+  const el = document.getElementById("basari");
+  el.style.display = "block";
+  el.textContent = m;
+  setTimeout(() => { el.style.display = "none"; }, 4000);
+}
+
+async function kontrol() {
+  const { data: { session } } = await client.auth.getSession();
+  if (!session) { window.location.href = "login.html"; return; }
+  await aiAnahtarlariniYukle();
+  await tahminGecmisYukle();
+}
+
+let aiAnahtarlari = { gemini: null, groq: null };
+
+async function aiAnahtarlariniYukle() {
+  const { data, error } = await client.from("ai_ayarlar").select("gemini_key, groq_key").eq("id", 1).single();
+  if (error) { hataGoster("AI anahtar yükleme: " + error.message); return; }
+  if (data) {
+    aiAnahtarlari.gemini = data.gemini_key;
+    aiAnahtarlari.groq = data.groq_key;
+  }
+}
+
+function promptOlustur(mac) {
+  let p = "Sen bir futbol analisti ve bahis tahmin uzmanısın. Aşağıdaki maç için detaylı bir tahmin yap.\n\n";
+  p += "MAÇ: " + mac.evSahibi + " vs " + mac.deplasman + "\n";
+  p += "LİG: " + mac.lig + "\n";
+  if (mac.ekstraBilgi) p += "EKSTRA BİLGİ: " + mac.ekstraBilgi + "\n";
+  p += "\nŞu marketler için tahmin üret:\n";
+  p += "1. Maç Sonucu (1/X/2)\n";
+  p += "2. Toplam Gol (2.5 üst/alt)\n";
+  p += "3. KG (Var/Yok)\n";
+  p += "4. Toplam Korner (9.5 üst/alt)\n";
+  p += "5. Toplam Kart (3.5 üst/alt)\n\n";
+  p += "Her market için:\n";
+  p += "- Tahmin (örn: 'Juventus kazanır')\n";
+  p += "- Güven yüzdesi (0-100 arası)\n";
+  p += "- Kısa gerekçe (1 cümle)\n\n";
+  p += "Yanıtı JSON formatında ver:\n";
+  p += '{"tahminler":[{"market":"Maç Sonucu","tahmin":"Juventus kazanır","guven":72,"gerekce":"..."},{"market":"Toplam Gol","tahmin":"2.5 üst","guven":65,"gerekce":"..."},...]}';
+  p += "\n\nSadece JSON döndür, başka bir şey yazma.";
+  return p;
+}
+
+async function geminiTahmin(prompt) {
+  const url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=" + aiAnahtarlari.gemini;
+  const body = {
+    contents: [{ parts: [{ text: prompt }] }],
+    generationConfig: { temperature: 0.7, maxOutputTokens: 2000 }
+  };
+  const r = await fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body)
+  });
+  if (!r.ok) {
+    const errText = await r.text();
+    throw new Error("Gemini hatası: " + r.status + " - " + errText.substring(0, 200));
+  }
+  const data = await r.json();
+  const text = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
+  return text;
+}
+
+async function groqTahmin(prompt) {
+  const url = "https://api.groq.com/openai/v1/chat/completions";
+  const body = {
+    model: "llama-3.3-70b-versatile",
+    messages: [{ role: "user", content: prompt }],
+    temperature: 0.7,
+    max_tokens: 2000
+  };
+  const r = await fetch(url, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": "Bearer " + aiAnahtarlari.groq
+    },
+    body: JSON.stringify(body)
+  });
+  if (!r.ok) {
+    const errText = await r.text();
+    throw new Error("Groq hatası: " + r.status + " - " + errText.substring(0, 200));
+  }
+  const data = await r.json();
+  return data.choices?.[0]?.message?.content || "";
+}
+
+function jsonCikar(text) {
+  try {
+    const match = text.match(/\{[\s\S]*\}/);
+    if (match) {
+      return JSON.parse(match[0]);
+    }
+    return JSON.parse(text);
+  } catch (e) {
+    return null;
+  }
+}
+
+async function tahminUret() {
+  const evSahibi = document.getElementById("evSahibi").value.trim();
+  const deplasman = document.getElementById("deplasman").value.trim();
+  const lig = document.getElementById("lig").value.trim();
+  const ekstraBilgi = document.getElementById("ekstraBilgi").value.trim();
+
+  if (!evSahibi || !deplasman || !lig) {
+    hataGoster("Takımlar ve lig zorunlu.");
+    return;
+  }
+
+  if (!aiAnahtarlari.gemini || !aiAnahtarlari.groq) {
+    hataGoster("AI anahtarları yüklenmedi. Ayarları kontrol edin.");
+    return;
+  }
+
+  mevcutMac = { evSahibi, deplasman, lig, ekstraBilgi };
+  const prompt = promptOlustur(mevcutMac);
+
+  document.getElementById("sonucBolum").style.display = "block";
+  document.getElementById("aiSonuclar").innerHTML =
+    '<div class="yukleniyor"><div class="spinner"></div><br>AI modelleri düşünüyor...</div>';
+
+  mevcutTahminler = [];
+
+  const sonuclar = [];
+
+  // Gemini
+  try {
+    const gText = await geminiTahmin(prompt);
+    const gJson = jsonCikar(gText);
+    if (gJson && gJson.tahminler) {
+      gJson.tahminler.forEach(t => {
+        mevcutTahminler.push({ model: "Gemini", market: t.market, tahmin: t.tahmin, guven: t.guven, gerekce: t.gerekce });
+      });
+      sonuclar.push({ model: "Gemini", basarili: true, ham: gText });
+    } else {
+      sonuclar.push({ model: "Gemini", basarili: false, ham: gText, hata: "JSON parse edilemedi" });
+    }
+  } catch (e) {
+    sonuclar.push({ model: "Gemini", basarili: false, hata: e.message });
+  }
+
+  // Groq
+  try {
+    const qText = await groqTahmin(prompt);
+    const qJson = jsonCikar(qText);
+    if (qJson && qJson.tahminler) {
+      qJson.tahminler.forEach(t => {
+        mevcutTahminler.push({ model: "Groq", market: t.market, tahmin: t.tahmin, guven: t.guven, gerekce: t.gerekce });
+      });
+      sonuclar.push({ model: "Groq", basarili: true, ham: qText });
+    } else {
+      sonuclar.push({ model: "Groq", basarili: false, ham: qText, hata: "JSON parse edilemedi" });
+    }
+  } catch (e) {
+    sonuclar.push({ model: "Groq", basarili: false, hata: e.message });
+  }
+
+  aiSonuclariGoster(sonuclar);
+}
+
+function aiSonuclariGoster(sonuclar) {
+  const el = document.getElementById("aiSonuclar");
+  let html = "";
+
+  sonuclar.forEach(s => {
+    html += '<div class="ai-kart">';
+    html += '<h3><span class="etiket">' + s.model + '</span>';
+    if (s.basarili) html += ' ✅ Başarılı';
+    else html += ' ❌ Hata';
+    html += '</h3>';
+
+    if (s.basarili) {
+      const modelTahminleri = mevcutTahminler.filter(t => t.model === s.model);
+      modelTahminleri.forEach(t => {
+        html += '<p><strong>' + t.market + ':</strong> ' + t.tahmin + ' <span style="color:#4ade80">(%' + t.guven + ')</span></p>';
+        if (t.gerekce) html += '<p style="font-size:0.8em;opacity:0.75;margin-left:10px">' + t.gerekce + '</p>';
+      });
+    } else {
+      html += '<p style="color:#fbbf24;font-size:0.8em">' + (s.hata || "Bilinmeyen hata") + '</p>';
+      if (s.ham) html += '<p style="font-size:0.75em;opacity:0.6">' + s.ham.substring(0, 200) + '...</p>';
+    }
+    html += '</div>';
+  });
+
+  el.innerHTML = html;
+}
+
+async function tahminKaydet() {
+  if (mevcutTahminler.length === 0) {
+    hataGoster("Kaydedilecek tahmin yok.");
+    return;
+  }
+
+  const { data: { session } } = await client.auth.getSession();
+  const kullaniciId = session.user.id;
+
+  let basarili = 0;
+  for (const t of mevcutTahminler) {
+    const { error } = await client.from("predictions").insert({
+      market: t.market,
+      prediction: t.tahmin,
+      confidence: t.guven,
+      result: "bekliyor",
+      ai_model: t.model,
+      ai_yanit: t.gerekce || "",
+      ev_sahibi: mevcutMac.evSahibi,
+      deplasman: mevcutMac.deplasman,
+      created_by: kullaniciId
+    });
+    if (!error) basarili++;
+  }
+
+  if (basarili > 0) {
+    basariGoster(basarili + " tahmin kaydedildi!");
+    await tahminGecmisYukle();
+  } else {
+    hataGoster("Kaydetme başarısız.");
+  }
+}
+
+async function tahminGecmisYukle() {
+  const { data, error } = await client.from("predictions")
+    .select("*")
+    .order("created_at", { ascending: false })
+    .limit(20);
+
+  if (error) { hataGoster("Geçmiş yükleme: " + error.message); return; }
+
+  const el = document.getElementById("tahminGecmis");
+  if (!data || data.length === 0) {
+    el.innerHTML = '<div class="bos">Henüz tahmin yok.</div>';
+    return;
+  }
+
+  el.innerHTML = data.map(t => {
+    const tarih = new Date(t.created_at).toLocaleString('tr-TR', {day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
+    return '<div class="tahmin-satir">' +
+      '<div class="mac">' + (t.ev_sahibi || "?") + ' - ' + (t.deplasman || "?") + '</div>' +
+      '<div><span class="piyasa">' + t.market + ':</span> ' + t.prediction + ' (%' + (t.confidence || 0) + ')</div>' +
+      '<div class="model">🤖 ' + (t.ai_model || "?") + ' | ' + tarih + '</div>' +
+      '</div>';
+  }).join("");
+}
+
+kontrol();
+</script>
+</body>
+</html>
