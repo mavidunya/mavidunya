@@ -24,6 +24,8 @@ p{font-size:1.05em;opacity:0.95}
 .kasa-kutu .tutar{font-size:1.2em;font-weight:bold}
 .butonlar{display:flex;gap:10px;margin-top:20px}
 .butonlar button{flex:1;padding:12px;border-radius:10px;border:none;font-weight:bold;font-size:1em;cursor:pointer}
+.btn-kasa{background:#3b82f6;color:#fff}
+.btn-kasa:hover{background:#2563eb}
 .btn-ayar{background:#64748b;color:#fff}
 .btn-ayar:hover{background:#475569}
 .btn-cikis{background:#ef4444;color:#fff}
@@ -57,6 +59,7 @@ p{font-size:1.05em;opacity:0.95}
 <div id="debug" class="hata"></div>
 
 <div class="butonlar">
+<button class="btn-kasa" onclick="window.location.href='kasa.html'">💰 Kasa</button>
 <button class="btn-ayar" onclick="window.location.href='ayarlar.html'">⚙️ Ayarlar</button>
 <button class="btn-cikis" onclick="cikisYap()">🚪 Çıkış</button>
 </div>
