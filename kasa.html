@@ -405,16 +405,7 @@ async function bahisSonuc(sonuc) {
     }
   }
 
-  if (kaynak === "aktif_rolling" && sonuc === "kazandi") {
-    const kar = anaKasa - referans;
-    if (kar > 0) {
-      const oranKar = parseFloat(ayar.kar_kilitli_oran) || 25;
-      const kilitliAktarim = kar * (oranKar / 100);
-      kilitliKar = kilitliKar + kilitliAktarim;
-      anaKasa = anaKasa - kilitliAktarim;
-      referans = anaKasa;
-    }
-  }
+  
 
   await client.from("ayarlar").update({
     ana_kasa: anaKasa,
