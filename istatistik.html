@@ -51,7 +51,7 @@ input,select{width:100%;padding:10px;border-radius:8px;border:none;font-size:1em
 </select>
 
 <label>Kategori</label>
-<select id="filtreKategori">
+<select id="filtreKategori" onchange="altMarketFiltreGuncelle()">
 <option value="tumu">Tümü</option>
 <option value="mac_sonucu">⚽ Maç Sonucu</option>
 <option value="gol">🥅 Gol</option>
@@ -66,12 +66,23 @@ input,select{width:100%;padding:10px;border-radius:8px;border:none;font-size:1em
 <option value="diger">📌 Diğer</option>
 </select>
 
+<label>Alt Market</label>
+<select id="filtreAltMarket">
+<option value="tumu">Tümü</option>
+</select>
+
 <label>Kişi</label>
 <select id="filtreKisi">
 <option value="tumu">Tümü</option>
 <option value="hasan">🔵 Hasan</option>
 <option value="hakan">🟢 Hakan</option>
 </select>
+ <label>Sonuç</label>
+<select id="filtreSonuc">
+<option value="tumu">Tümü</option>
+<option value="kazandi">✅ Kazandı</option>
+<option value="kaybetti">❌ Kaybetti</option>
+</select> 
 
 <button class="buton btn-mavi" onclick="filtrele()">🔍 Filtrele</button>
 <button class="buton btn-gri" onclick="filtreleriTemizle()">🔄 Temizle</button>
@@ -128,7 +139,7 @@ const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
 const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 let tumVeri = [];
-let mevcutFiltreler = { tarih: "tumu", kategori: "tumu", kisi: "tumu" };
+let mevcutFiltreler = { tarih: "tumu", kategori: "tumu", altMarket: "tumu", kisi: "tumu", sonuc: "tumu" };
 
 function tlFormat(n) {
   return new Intl.NumberFormat('tr-TR', {maximumFractionDigits: 2}).format(n) + " TL";
@@ -161,15 +172,19 @@ async function veriYukle() {
 function filtrele() {
   mevcutFiltreler.tarih = document.getElementById("filtreTarih").value;
   mevcutFiltreler.kategori = document.getElementById("filtreKategori").value;
+  mevcutFiltreler.altMarket = document.getElementById("filtreAltMarket").value;
   mevcutFiltreler.kisi = document.getElementById("filtreKisi").value;
+  mevcutFiltreler.sonuc = document.getElementById("filtreSonuc").value;
   hesapla();
 }
 
 function filtreleriTemizle() {
   document.getElementById("filtreTarih").value = "tumu";
   document.getElementById("filtreKategori").value = "tumu";
+  document.getElementById("filtreAltMarket").innerHTML = '<option value="tumu">Tümü</option>';
   document.getElementById("filtreKisi").value = "tumu";
-  mevcutFiltreler = { tarih: "tumu", kategori: "tumu", kisi: "tumu" };
+  document.getElementById("filtreSonuc").value = "tumu";
+  mevcutFiltreler = { tarih: "tumu", kategori: "tumu", altMarket: "tumu", kisi: "tumu", sonuc: "tumu" };
   hesapla();
 }
 
@@ -198,6 +213,13 @@ function filtreUygula(veri) {
     });
   }
 
+ if (mevcutFiltreler.altMarket && mevcutFiltreler.altMarket !== "tumu") {
+    sonuc = sonuc.filter(k => k.market === mevcutFiltreler.altMarket);
+  }
+
+  if (mevcutFiltreler.sonuc && mevcutFiltreler.sonuc !== "tumu") {
+    sonuc = sonuc.filter(k => k.bahis_durumu === mevcutFiltreler.sonuc);
+  }
   return sonuc;
 }
 
@@ -343,6 +365,33 @@ function seriBazliHesapla() {
   document.getElementById("ortAdim").textContent = ortAdim;
 }
 
+const MARKET_LISTESI = {
+  "mac_sonucu": ["Maç Sonucu (1X2)", "Çifte Şans", "Çifte Şans ve Toplam Alt/Üst", "Handikap", "Herhangi Bir Yarıyı Kazanır", "Geriye Düşüp Berabere Biter", "Geriden Gelip Kazanır"],
+  "gol": ["Toplam Gol Üst/Alt", "KG Var/Yok", "Toplam Gol Aralığı", "Ev Gol Aralığı", "Dep Gol Aralığı", "Ev Gol Yer", "Dep Gol Yer", "Gol Yemeden Kazanır"],
+  "ilk_ikinci_yari": ["İlk Yarı Sonucu", "İkinci Yarı Sonucu", "İlk Yarı Gol", "İkinci Yarı Gol", "Her İki Yarıda Gol", "Her İki Yarıda 1.5 Üst"],
+  "takim_bazli": ["Ev Her İki Yarıda Gol Atar", "Dep Her İki Yarıda Gol Atar", "Ev İlk Yarı Gol", "Dep İlk Yarı Gol", "Ev İkinci Yarı Gol", "Dep İkinci Yarı Gol", "Ev Galibiyet + Üst", "Dep Galibiyet + Üst"],
+  "korner": ["Toplam Korner", "İlk Yarı Korner", "Takım Korner", "Korner Handikap"],
+  "kart": ["Toplam Kart", "Takım Kart", "Kırmızı Kart", "İlk Yarı Kart"],
+  "zaman_bazli": ["İlk 10 Dk Gol", "15-30 Dk Arası Gol", "Son 15 Dk Gol", "Maçın Geri Kalanını Kazanır"],
+  "ozel_oyuncu": ["Gol Atacak Oyuncu", "İlk Golü Atan Oyuncu", "Penaltı Olur mu", "VAR Kararı", "Ofsayt Gol", "Kendi Kalesine Gol"],
+  "toplam_istatistik": ["Toplam Şut", "İsabetli Şut", "Ofsayt Sayısı"],
+  "turnuva": ["Kupa Kazananı", "Finalist", "Çeyrek Final / Yarı Final", "Gruplardan Çıkma"],
+  "diger": ["Uzatmalara Gider", "Penaltılara Gider"]
+};
+function altMarketFiltreGuncelle() {
+  const kategori = document.getElementById("filtreKategori").value;
+  const altMarketSelect = document.getElementById("filtreAltMarket");
+  altMarketSelect.innerHTML = '<option value="tumu">Tümü</option>';
+
+  if (!kategori || kategori === "tumu" || !MARKET_LISTESI[kategori]) return;
+
+  MARKET_LISTESI[kategori].forEach(function(m) {
+    const opt = document.createElement("option");
+    opt.value = m;
+    opt.textContent = m;
+    altMarketSelect.appendChild(opt);
+  });
+}
 kontrol();
 </script>
 </body>
