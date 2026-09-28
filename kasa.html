@@ -422,7 +422,7 @@ async function bahisSonuc(sonuc) {
 }
 
 async function seriTamamla() {
-  if (!aktifBahis) { hataGoster("Aktif bahis yok."); return; }
+ if (!aktifSeri) { hataGoster("Aktif seri yok."); return; }
 
   const transferMiktar = parseFloat(document.getElementById("seriTransferMiktar").value) || 0;
   const kalanKarar = document.getElementById("seriKalanKarar").value;
@@ -456,7 +456,7 @@ async function seriTamamla() {
 
   await client.from("bankroll").update({
     seri_durumu: "tamamlandi"
-  }).eq("seri_no", aktifBahis.seri_no).eq("seri_durumu", "devam_ediyor");
+  }).eq("seri_no", aktifSeri.seri_no).eq("seri_durumu", "devam_ediyor");
 
   await client.from("ayarlar").update({
     ana_kasa: anaKasa,
