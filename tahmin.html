@@ -181,13 +181,30 @@ async function groqTahmin(prompt) {
   return data.choices?.[0]?.message?.content || "";
 }
 
-function jsonCikar(text) {
+  function jsonCikar(text) {
   try {
     const match = text.match(/\{[\s\S]*\}/);
+    let parsed;
     if (match) {
-      return JSON.parse(match[0]);
+      parsed = JSON.parse(match[0]);
+    } else {
+      parsed = JSON.parse(text);
     }
-    return JSON.parse(text);
+    
+    // Normalize: guven alanını düzelt
+    if (parsed && parsed.tahminler && Array.isArray(parsed.tahminler)) {
+      parsed.tahminler = parsed.tahminler.map(t => {
+        const guven = t.guven ?? t.confidence ?? t.guven_yuzdesi ?? t.confidence_percent ?? t.confidence_score ?? 0;
+        return {
+          market: t.market || t.piyasa || "?",
+          tahmin: t.tahmin || t.prediction || "?",
+          guven: parseFloat(guven) || 0,
+          gerekce: t.gerekce || t.gerekçe || t.reason || t.aciklama || ""
+        };
+      });
+    }
+    
+    return parsed;
   } catch (e) {
     return null;
   }
