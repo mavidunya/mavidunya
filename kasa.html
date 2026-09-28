@@ -102,10 +102,29 @@ input,select{width:100%;padding:10px;border-radius:8px;border:none;font-size:1em
 <!-- YENİ BAHİS -->
 <div class="bolum">
 <h2>➕ Yeni Bahis Ekle</h2>
-<label>Maç</label>
-<input type="text" id="yeniMac" placeholder="Örn: Arsenal vs Chelsea">
-<label>Market</label>
-<input type="text" id="yeniMarket" placeholder="Örn: Arsenal kazanır">
+<label>Market Kategorisi</label>
+<select id="yeniKategori" onchange="altMarketGuncelle()">
+<option value="">Seçiniz...</option>
+<option value="mac_sonucu">⚽ Maç Sonucu</option>
+<option value="gol">🥅 Gol</option>
+<option value="ilk_ikinci_yari">⏱️ İlk/İkinci Yarı</option>
+<option value="takim_bazli">🏆 Takım Bazlı</option>
+<option value="korner">🚩 Korner</option>
+<option value="kart">🟨 Kart</option>
+<option value="zaman_bazli">⏰ Zaman Bazlı Gol</option>
+<option value="ozel_oyuncu">🎯 Özel / Oyuncu</option>
+<option value="toplam_istatistik">📊 Toplam İstatistik</option>
+<option value="turnuva">🏆 Turnuva/Kupa</option>
+<option value="diger">📌 Diğer</option>
+</select>
+
+<label>Alt Market</label>
+<select id="yeniAltMarket">
+<option value="">Önce kategori seçin...</option>
+</select>
+
+<label>Market Detayı (opsiyonel)</label>
+<input type="text" id="yeniMarket" placeholder="Örn: 2.5 üst, 9.5 üst">
 <label>Oran</label>
 <input type="number" id="yeniOran" step="0.01" placeholder="Örn: 1.85">
 <label>Tutar (TL)</label>
