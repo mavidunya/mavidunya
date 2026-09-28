@@ -247,6 +247,124 @@ async function gecmisYukle() {
   }).join("");
 }
 
+async function transferYap() {
+  const nereden = document.getElementById("transferNereden").value;
+  const nereye = document.getElementById("transferNereye").value;
+  const miktar = parseFloat(document.getElementById("transferMiktar").value);
+
+  if (!miktar || miktar <= 0) { hataGoster("Geçerli bir miktar girin."); return; }
+  if (nereden === nereye) { hataGoster("Aynı kasaya transfer yapılamaz."); return; }
+
+  const { data: ayar, error: aErr } = await client.from("ayarlar").select("*").eq("id", 1).single();
+  if (aErr) { hataGoster("Ayar okuma: " + aErr.message); return; }
+
+  const eskiNereden = parseFloat(ayar[nereden]) || 0;
+  const eskiNereye = parseFloat(ayar[nereye]) || 0;
+
+  if (eskiNereden < miktar) { hataGoster("Yetersiz bakiye. Mevcut: " + tlFormat(eskiNereden)); return; }
+
+  const yeniNereden = eskiNereden - miktar;
+  const yeniNereye = eskiNereye + miktar;
+
+  const guncelleme = {};
+  guncelleme[nereden] = yeniNereden;
+  guncelleme[nereye] = yeniNereye;
+  guncelleme.updated_at = new Date().toISOString();
+
+  const { error: uErr } = await client.from("ayarlar").update(guncelleme).eq("id", 1);
+  if (uErr) { hataGoster("Transfer hatası: " + uErr.message); return; }
+
+  await client.from("bankroll").insert({
+    mac: "TRANSFER: " + nereden + " → " + nereye,
+    market: "Kasa transferi",
+    amount: miktar,
+    transaction_type: "transfer",
+    kasa_tipi: nereye,
+    bahis_durumu: "transfer",
+    note: nereden + " → " + nereye,
+    balance_after: yeniNereye,
+    created_by: mevcutKullanici
+  });
+
+  document.getElementById("transferMiktar").value = "";
+  await kasaYukle();
+  await gecmisYukle();
+}
+
+async function bahisEkle() {
+  const mac = document.getElementById("yeniMac").value.trim();
+  const market = document.getElementById("yeniMarket").value.trim();
+  const oran = parseFloat(document.getElementById("yeniOran").value);
+  const tutar = parseFloat(document.getElementById("yeniTutar").value);
+  const kaynak = document.getElementById("yeniKaynak").value;
+
+  if (!mac || !market || !oran || !tutar) { hataGoster("Lütfen tüm alanları doldurun."); return; }
+
+  const { data: ayar, error: aErr } = await client.from("ayarlar").select("*").eq("id", 1).single();
+  if (aErr) { hataGoster("Ayar okuma: " + aErr.message); return; }
+
+  const eskiKaynak = parseFloat(ayar[kaynak]) || 0;
+  if (eskiKaynak < tutar) { hataGoster("Yetersiz bakiye. Mevcut: " + tlFormat(eskiKaynak)); return; }
+
+  let seriNo = 1;
+  let adimNo = 1;
+
+  const { data: sonBahis } = await client.from("bankroll")
+    .select("seri_no, adim_no")
+    .eq("bahis_durumu", "bekliyor")
+    .order("created_at", { ascending: false })
+    .limit(1);
+
+  if (sonBahis && sonBahis.length > 0) {
+    seriNo = sonBahis[0].seri_no || 1;
+    adimNo = (sonBahis[0].adim_no || 0) + 1;
+  } else {
+    const { data: sonSeri } = await client.from("bankroll")
+      .select("seri_no")
+      .order("seri_no", { ascending: false })
+      .limit(1);
+    if (sonSeri && sonSeri.length > 0) {
+      seriNo = (sonSeri[0].seri_no || 0) + 1;
+    }
+    adimNo = 1;
+  }
+
+  const yeniKaynak = eskiKaynak - tutar;
+  const guncelleme = {};
+  guncelleme[kaynak] = yeniKaynak;
+  guncelleme.updated_at = new Date().toISOString();
+
+  const { error: uErr } = await client.from("ayarlar").update(guncelleme).eq("id", 1);
+  if (uErr) { hataGoster("Kasa güncelleme hatası: " + uErr.message); return; }
+
+  const { error: bErr } = await client.from("bankroll").insert({
+    mac: mac,
+    market: market,
+    oran: oran,
+    amount: -tutar,
+    transaction_type: "bahis",
+    kasa_tipi: kaynak,
+    bahis_durumu: "bekliyor",
+    seri_no: seriNo,
+    adim_no: adimNo,
+    seri_durumu: "devam_ediyor",
+    note: mac + " — " + market,
+    balance_after: yeniKaynak,
+    created_by: mevcutKullanici
+  });
+
+  if (bErr) { hataGoster("Bahis ekleme: " + bErr.message); return; }
+
+  document.getElementById("yeniMac").value = "";
+  document.getElementById("yeniMarket").value = "";
+  document.getElementById("yeniOran").value = "";
+  document.getElementById("yeniTutar").value = "";
+
+  await kasaYukle();
+  await seriYukle();
+  await aktifBahisYukle();
+  await gecmisYukle();
+}  
 kontrol();
 </script>
 </body>
