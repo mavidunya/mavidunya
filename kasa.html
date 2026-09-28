@@ -190,9 +190,11 @@ async function seriYukle() {
     aktifSeri = data[0];
     document.getElementById("seriBilgi").textContent = 
       "Seri " + aktifSeri.seri_no + " — Adım " + (aktifSeri.adim_no || 1);
+ document.getElementById("seriTamamlaBolum").style.display = "block";
   } else {
     aktifSeri = null;
     document.getElementById("seriBilgi").textContent = "Henüz seri başlamadı. Yeni bahis ekleyin.";
+document.getElementById("seriTamamlaBolum").style.display = "none";
   }
 }
 
