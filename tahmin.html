@@ -138,7 +138,7 @@ function promptOlustur(mac) {
 }
 
 async function geminiTahmin(prompt) {
-  const url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=" + aiAnahtarlari.gemini;
+  const url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=" + aiAnahtarlari.gemini;
   const body = {
     contents: [{ parts: [{ text: prompt }] }],
     generationConfig: { temperature: 0.7, maxOutputTokens: 2000 }
@@ -160,7 +160,7 @@ async function geminiTahmin(prompt) {
 async function groqTahmin(prompt) {
   const url = "https://api.groq.com/openai/v1/chat/completions";
   const body = {
-    model: "llama-3.3-70b-versatile",
+    model: "openai/gpt-oss-120b",
     messages: [{ role: "user", content: prompt }],
     temperature: 0.7,
     max_tokens: 2000
