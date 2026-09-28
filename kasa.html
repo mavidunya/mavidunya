@@ -159,6 +159,95 @@ function hataGoster(m) {
 function tarihFormat(t) {
   return new Date(t).toLocaleString('tr-TR', {day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
 }
+async function kontrol() {
+  const { data: { session } } = await client.auth.getSession();
+  if (!session) { window.location.href = "login.html"; return; }
+  mevcutKullanici = session.user.id;
+  await kasaYukle();
+  await seriYukle();
+  await aktifBahisYukle();
+  await gecmisYukle();
+}
+
+async function kasaYukle() {
+  const { data: ayar } = await client.from("ayarlar").select("*").eq("id", 1).single();
+  if (ayar) {
+    document.getElementById("anaKasa").textContent = tlFormat(parseFloat(ayar.ana_kasa) || 0);
+    document.getElementById("yedekKasa").textContent = tlFormat(parseFloat(ayar.yedek_kasa) || 0);
+    document.getElementById("aktifRolling").textContent = tlFormat(parseFloat(ayar.aktif_rolling) || 0);
+    document.getElementById("kilitliKar").textContent = tlFormat(parseFloat(ayar.kilitli_kar) || 0);
+  }
+}
+
+async function seriYukle() {
+  const { data } = await client.from("bankroll")
+    .select("seri_no, adim_no, bahis_durumu")
+    .eq("seri_durumu", "devam_ediyor")
+    .order("created_at", { ascending: false })
+    .limit(1);
+
+  if (data && data.length > 0) {
+    aktifSeri = data[0];
+    document.getElementById("seriBilgi").textContent = 
+      "Seri " + aktifSeri.seri_no + " — Adım " + (aktifSeri.adim_no || 1);
+  } else {
+    aktifSeri = null;
+    document.getElementById("seriBilgi").textContent = "Henüz seri başlamadı. Yeni bahis ekleyin.";
+  }
+}
+
+async function aktifBahisYukle() {
+  const { data, error } = await client.from("bankroll")
+    .select("*")
+    .eq("bahis_durumu", "bekliyor")
+    .order("created_at", { ascending: false })
+    .limit(1);
+
+  if (error) { hataGoster("Aktif bahis: " + error.message); return; }
+
+  if (data && data.length > 0) {
+    aktifBahis = data[0];
+    document.getElementById("aktifBahisBolum").style.display = "block";
+    document.getElementById("aktifBahisKart").innerHTML =
+      '<div class="mac">' + (aktifBahis.mac || "Maç belirtilmemiş") + '</div>' +
+      '<div>' + (aktifBahis.market || "Market belirtilmemiş") + '</div>' +
+      '<div>Oran: ' + (aktifBahis.oran || "-") + ' | Tutar: ' + tlFormat(Math.abs(aktifBahis.amount || 0)) + '</div>' +
+      '<div>Seri ' + (aktifBahis.seri_no || "-") + ', Adım ' + (aktifBahis.adim_no || "-") + '</div>';
+  } else {
+    aktifBahis = null;
+    document.getElementById("aktifBahisBolum").style.display = "none";
+  }
+}
+
+async function gecmisYukle() {
+  const { data, error } = await client.from("bankroll")
+    .select("*")
+    .order("created_at", { ascending: false })
+    .limit(20);
+
+  if (error) { hataGoster("Geçmiş: " + error.message); return; }
+
+  const liste = document.getElementById("gecmisListe");
+  if (!data || data.length === 0) {
+    liste.innerHTML = '<div class="bos">Henüz işlem yok.</div>';
+    return;
+  }
+
+  liste.innerHTML = data.map(function(k) {
+    const tarih = tarihFormat(k.created_at);
+    let durumClass = "durum-bekliyor";
+    let durumText = "⏳ BEKLİYOR";
+    if (k.bahis_durumu === "kazandi") { durumClass = "durum-kazandi"; durumText = "✅ KAZANDI"; }
+    else if (k.bahis_durumu === "kaybetti") { durumClass = "durum-kaybetti"; durumText = "❌ KAYBETTİ"; }
+    return '<div class="islem">' +
+      '<div class="satir1"><span class="mac">' + (k.mac || "-") + '</span><span>' + tarih + '</span></div>' +
+      '<div>' + (k.market || "-") + ' | Oran: ' + (k.oran || "-") + ' | ' + tlFormat(Math.abs(k.amount || 0)) + '</div>' +
+      '<div class="satir1"><span>Seri ' + (k.seri_no || "-") + ', Adım ' + (k.adim_no || "-") + '</span><span class="durum ' + durumClass + '">' + durumText + '</span></div>' +
+      '</div>';
+  }).join("");
+}
+
+kontrol();
 </script>
 </body>
 </html>
