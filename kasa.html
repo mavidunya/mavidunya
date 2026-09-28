@@ -121,14 +121,11 @@ input,select{width:100%;padding:10px;border-radius:8px;border:none;font-size:1em
 <!-- SERİYİ TAMAMLA -->
 <div class="bolum" id="seriTamamlaBolum" style="display:none">
 <h2>🎯 Seriyi Tamamla</h2>
-<label>Ana Kasaya Aktarılacak Miktar (TL)</label>
-<input type="number" id="seriTransferMiktar" placeholder="Örn: 5000">
-<label>Kalan Aktif Rolling'de kalsın mı?</label>
-<select id="seriKalanKarar">
-<option value="evet">Evet, kalsın</option>
-<option value="hayir">Hayır, hepsi ana kasaya</option>
-</select>
-<button class="buton btn-yesil" onclick="seriTamamla()">✅ Seriyi Tamamla</button>
+<p style="opacity:0.9;margin:10px 0">Aktif Rolling'deki tüm para ana kasaya aktarılacak. Onaylıyor musunuz?</p>
+<div id="seriOnayAlani">
+<button class="buton btn-yesil" onclick="seriTamamlaOnay()">✅ Evet, Tamamla</button>
+<button class="buton btn-gri" onclick="seriTamamlaIptal()">❌ Hayır, Vazgeç</button>
+</div>
 </div>
 
 <!-- İŞLEM GEÇMİŞİ -->
@@ -436,11 +433,8 @@ async function bahisSonuc(sonuc) {
   await gecmisYukle();
 }
 
-async function seriTamamla() {
- if (!aktifSeri) { hataGoster("Aktif seri yok."); return; }
-
-  const transferMiktar = parseFloat(document.getElementById("seriTransferMiktar").value) || 0;
-  const kalanKarar = document.getElementById("seriKalanKarar").value;
+async function seriTamamlaOnay() {
+  if (!aktifSeri) { hataGoster("Aktif seri yok."); return; }
 
   const { data: ayar } = await client.from("ayarlar").select("*").eq("id", 1).single();
   if (!ayar) { hataGoster("Ayar okunamadı."); return; }
@@ -450,15 +444,8 @@ async function seriTamamla() {
   let kilitliKar = parseFloat(ayar.kilitli_kar) || 0;
   let referans = parseFloat(ayar.kilitli_referans) || 0;
 
-  if (kalanKarar === "hayir") {
-    anaKasa = anaKasa + aktifRolling;
-    aktifRolling = 0;
-  } else {
-    if (transferMiktar > 0 && transferMiktar <= aktifRolling) {
-      anaKasa = anaKasa + transferMiktar;
-      aktifRolling = aktifRolling - transferMiktar;
-    }
-  }
+  anaKasa = anaKasa + aktifRolling;
+  aktifRolling = 0;
 
   const kar = anaKasa - referans;
   if (kar > 0) {
@@ -468,6 +455,11 @@ async function seriTamamla() {
     anaKasa = anaKasa - kilitliAktarim;
     referans = anaKasa;
   }
+
+  const oranYeni = parseFloat(ayar.kayip_sonrasi_oran) || 30;
+  const yeniAktif = anaKasa * (oranYeni / 100);
+  aktifRolling = yeniAktif;
+  anaKasa = anaKasa - yeniAktif;
 
   await client.from("bankroll").update({
     seri_durumu: "tamamlandi"
@@ -481,12 +473,14 @@ async function seriTamamla() {
     updated_at: new Date().toISOString()
   }).eq("id", 1);
 
-  document.getElementById("seriTransferMiktar").value = "";
-
   await kasaYukle();
   await seriYukle();
   await aktifBahisYukle();
   await gecmisYukle();
+}
+
+function seriTamamlaIptal() {
+  document.getElementById("seriTamamlaBolum").style.display = "none";
 }
 kontrol();
 </script>
