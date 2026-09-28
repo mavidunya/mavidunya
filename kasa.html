@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mavidunya - Kasa</title>
+<style>
+body{font-family:Arial,sans-serif;background:linear-gradient(135deg,#1e3c72,#2a5298);color:#fff;margin:0;padding:15px;min-height:100vh}
+.kapsayici{max-width:600px;margin:0 auto}
+h1{font-size:1.6em;text-align:center;margin:10px 0}
+.geri{background:rgba(255,255,255,0.15);color:#fff;border:none;padding:8px 15px;border-radius:8px;font-size:0.9em;cursor:pointer;margin-bottom:10px}
+.bolum{background:rgba(255,255,255,0.08);padding:15px;border-radius:15px;margin-bottom:15px}
+.bolum h2{font-size:1.1em;margin:0 0 12px 0;opacity:0.95}
+.kasa-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.kasa-kutu{background:rgba(255,255,255,0.08);padding:12px;border-radius:10px;text-align:center}
+.kasa-kutu .baslik{font-size:0.8em;opacity:0.8;margin-bottom:4px}
+.kasa-kutu .tutar{font-size:1.05em;font-weight:bold}
+label{display:block;font-size:0.85em;opacity:0.85;margin:8px 0 4px 0}
+input,select{width:100%;padding:10px;border-radius:8px;border:none;font-size:1em;box-sizing:border-box;background:rgba(255,255,255,0.95);color:#000}
+.buton{width:100%;padding:12px;border-radius:10px;border:none;font-weight:bold;font-size:1em;cursor:pointer;margin-top:10px}
+.btn-yesil{background:#4ade80;color:#064e3b}
+.btn-yesil:hover{background:#22c55e}
+.btn-mavi{background:#3b82f6;color:#fff}
+.btn-mavi:hover{background:#2563eb}
+.btn-kirmizi{background:#ef4444;color:#fff}
+.btn-kirmizi:hover{background:#dc2626}
+.btn-gri{background:#64748b;color:#fff}
+.btn-gri:hover{background:#475569}
+.islem{background:rgba(255,255,255,0.06);padding:10px;border-radius:10px;margin-bottom:8px;font-size:0.85em}
+.islem .satir1{display:flex;justify-content:space-between;margin-bottom:4px}
+.islem .mac{font-weight:bold}
+.islem .kim{opacity:0.85}
+.islem .durum{font-size:0.8em;padding:2px 8px;border-radius:10px;display:inline-block}
+.durum-bekliyor{background:#fbbf24;color:#000}
+.durum-kazandi{background:#4ade80;color:#064e3b}
+.durum-kaybetti{background:#ef4444;color:#fff}
+.aktif-bahis{background:rgba(251,191,36,0.2);border:1px solid #fbbf24;padding:15px;border-radius:12px;margin-bottom:12px}
+.aktif-bahis .mac{font-size:1.1em;font-weight:bold;margin-bottom:5px}
+.hata{background:#fbbf24;color:#000;padding:10px;border-radius:10px;margin-top:10px;font-size:0.85em;display:none}
+.bos{opacity:0.6;text-align:center;padding:15px;font-size:0.9em}
+</style>
+</head>
+<body>
+<div class="kapsayici">
+<button class="geri" onclick="window.location.href='index.html'">← Ana Sayfa</button>
+<h1>💰 Kasa</h1>
+<div id="debug" class="hata"></div>
+
+<div class="bolum">
+<h2>📊 Kasa Özeti</h2>
+<div class="kasa-grid">
+<div class="kasa-kutu"><div class="baslik">💰 Ana Kasa</div><div class="tutar" id="anaKasa">0 TL</div></div>
+<div class="kasa-kutu"><div class="baslik">🔒 Yedek Kasa</div><div class="tutar" id="yedekKasa">0 TL</div></div>
+<div class="kasa-kutu"><div class="baslik">⚡ Aktif Rolling</div><div class="tutar" id="aktifRolling">0 TL</div></div>
+<div class="kasa-kutu"><div class="baslik">🔐 Kilitli Kâr</div><div class="tutar" id="kilitliKar">0 TL</div></div>
+</div>
+</div>
+
+<div class="bolum" id="aktifBahisBolum" style="display:none">
+<h2>🎯 Aktif Bahis</h2>
+<div class="aktif-bahis" id="aktifBahisKart"></div>
+<button class="buton btn-yesil" onclick="bahisSonuc('kazandi')">✅ Kazandı</button>
+<button class="buton btn-kirmizi" onclick="bahisSonuc('kaybetti')">❌ Kaybetti</button>
+</div>
+
+<div class="bolum">
+<h2>➕ Yeni Bahis Ekle</h2>
+<label>Maç</label>
+<input type="text" id="yeniMac" placeholder="Örn: Arsenal vs Chelsea">
+<label>Market</label>
+<input type="text" id="yeniMarket" placeholder="Örn: Arsenal kazanır">
+<label>Oran</label>
+<input type="number" id="yeniOran" step="0.01" placeholder="Örn: 1.85">
+<label>Tutar (TL)</label>
+<input type="number" id="yeniTutar" placeholder="Örn: 1000">
+<label>Nereden?</label>
+<select id="yeniKaynak">
+<option value="aktif">⚡ Aktif Rolling'den</option>
+<option value="ana">💰 Ana Kasa'dan</option>
+<option value="yedek">🔒 Yedek Kasa'dan</option>
+</select>
+<button class="buton btn-mavi" onclick="bahisEkle()">💾 Bahsi Kaydet</button>
+</div>
+
+<div class="bolum">
+<h2>📜 İşlem Geçmişi (Son 20)</h2>
+<div id="gecmisListe"></div>
+<button class="buton btn-gri" onclick="window.location.href='gecmis.html'">📋 Tümünü Gör</button>
+</div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+const SUPABASE_URL = "https://bwdoiltmkrqfxqknedih.supabase.co";
+const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ3ZG9pbHRta3JxZnhxa25lZGloIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA0NTkzNjcsImV4cCI6MjEwNjAzNTM2N30.mx1O66LItD6Q6ED1Z75YzGXW7ijSDUVAl9R2df4Km8o";
+const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+let aktifBahis = null;
+let mevcutKullanici = null;
+
+function tlFormat(n) {
+  return new Intl.NumberFormat('tr-TR', {maximumFractionDigits: 2}).format(n) + " TL";
+}
+
+function hataGoster(m) {
+  const el = document.getElementById("debug");
+  el.style.display = "block";
+  el.textContent = "DEBUG: " + m;
+}
+
+async function kontrol() {
+  const { data: { session } } = await client.auth.getSession();
+  if (!session) { window.location.href = "login.html"; return; }
+  mevcutKullanici = session.user.id;
+  await kasaYukle();
+  await gecmisYukle();
+  await aktifBahisYukle();
+}
+
+async function kasaYukle() {
+  const { data: ayar } = await client.from("ayarlar").select("*").eq("id", 1).single();
+  if (ayar) {
+    document.getElementById("anaKasa").textContent = tlFormat(parseFloat(ayar.ana_kasa) || 0);
+    document.getElementById("yedekKasa").textContent = tlFormat(parseFloat(ayar.yedek_kasa) || 0);
+    document.getElementById("aktifRolling").textContent = tlFormat(parseFloat(ayar.aktif_rolling) || 0);
+    document.getElementById("kilitliKar").textContent = tlFormat(parseFloat(ayar.kilitli_kar) || 0);
+  }
+}
+
+async function aktifBahisYukle() {
+  const { data, error } = await client.from("bankroll")
+    .select("*")
+    .eq("bahis_durumu", "bekliyor")
+    .order("created_at", { ascending: false })
+    .limit(1);
+
+  if (error) { hataGoster("Aktif bahis: " + error.message); return; }
+
+  if (data && data.length > 0) {
+    aktifBahis = data[0];
+    document.getElementById("aktifBahisBolum").style.display = "block";
+    document.getElementById("aktifBahisKart").innerHTML =
+      '<div class="mac">' + (aktifBahis.mac || "Maç belirtilmemiş") + '</div>' +
+      '<div>' + (aktifBahis.market || "Market belirtilmemiş") + '</div>' +
+      '<div>Oran: ' + (aktifBahis.oran || "-") + ' | Tutar: ' + tlFormat(aktifBahis.amount || 0) + '</div>';
+  } else {
+    aktifBahis = null;
+    document.getElementById("aktifBahisBolum").style.display = "none";
+  }
+}
+
+async function bahisEkle() {
+  const mac = document.getElementById("yeniMac").value.trim();
+  const market = document.getElementById("yeniMarket").value.trim();
+  const oran = parseFloat(document.getElementById("yeniOran").value);
+  const tutar = parseFloat(document.getElementById("yeniTutar").value);
+  const kaynak = document.getElementById("yeniKaynak").value;
+
+  if (!mac || !market || !oran || !tutar) {
+    hataGoster("Lütfen tüm alanları doldurun.");
+    return;
+  }
+
+  const { error } = await client.from("bankroll").insert({
+    mac: mac,
+    market: market,
+    oran: oran,
+    amount: -tutar,
+    transaction_type: "bahis",
+    kasa_tipi: kaynak,
+    bahis_durumu: "bekliyor",
+    note: mac + " — " + market,
+    balance_after: 0,
+    created_by: mevcutKullanici
+  });
+
+  if (error) { hataGoster("Bahis ekleme: " + error.message); return; }
+
+  document.getElementById("yeniMac").value = "";
+  document.getElementById("yeniMarket").value = "";
+  document.getElementById("yeniOran").value = "";
+  document.getElementById("yeniTutar").value = "";
+  await gecmisYukle();
+  await aktifBahisYukle();
+}
+
+async function bahisSonuc(sonuc) {
+  if (!aktifBahis) return;
+
+  const oran = parseFloat(aktifBahis.oran) || 1;
+  const tutar = Math.abs(parseFloat(aktifBahis.amount)) || 0;
+  const kazanc = sonuc === "kazandi" ? (tutar * oran) : 0;
+
+  const { error: e1 } = await client.from("bankroll").update({
+    bahis_durumu: sonuc,
+    balance_after: kazanc
+  }).eq("id", aktifBahis.id);
+
+  if (e1) { hataGoster("Sonuç güncelleme: " + e1.message); return; }
+
+  if (sonuc === "kazandi") {
+    const { data: ayar } = await client.from("ayarlar").select("*").eq("id", 1).single();
+    if (ayar) {
+      const yeniAna = parseFloat(ayar.ana_kasa) || 0;
+      const yeniAktif = parseFloat(ayar.aktif_rolling) || 0;
+      await client.from("ayarlar").update({ ana_kasa: yeniAna + kazanc, aktif_rolling: yeniAktif }).eq("id", 1);
+    }
+  }
+
+  await gecmisYukle();
+  await aktifBahisYukle();
+  await kasaYukle();
+}
+
+async function gecmisYukle() {
+  const { data, error } = await client.from("bankroll")
+    .select("*")
+    .order("created_at", { ascending: false })
+    .limit(20);
+
+  if (error) { hataGoster("Geçmiş: " + error.message); return; }
+
+  const liste = document.getElementById("gecmisListe");
+  if (!data || data.length === 0) {
+    liste.innerHTML = '<div class="bos">Henüz işlem yok.</div>';
+    return;
+  }
+
+  liste.innerHTML = data.map(function(k) {
+    const tarih = new Date(k.created_at).toLocaleString('tr-TR', {day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
+    const durumClass = k.bahis_durumu === "kazandi" ? "durum-kazandi" : (k.bahis_durumu === "kaybetti" ? "durum-kaybetti" : "durum-bekliyor");
+    const durumText = k.bahis_durumu === "kazandi" ? "✅ KAZANDI" : (k.bahis_durumu === "kaybetti" ? "❌ KAYBETTİ" : "⏳ BEKLİYOR");
+    return '<div class="islem">' +
+      '<div class="satir1"><span class="mac">' + (k.mac || "-") + '</span><span>' + tarih + '</span></div>' +
+      '<div>' + (k.market || "-") + ' | Oran: ' + (k.oran || "-") + '</div>' +
+      '<div class="satir1"><span>' + tlFormat(Math.abs(k.amount || 0)) + '</span><span class="durum ' + durumClass + '">' + durumText + '</span></div>' +
+      '</div>';
+  }).join("");
+}
+
+kontrol();
+</script>
+</body>
+</html>
