@@ -322,14 +322,49 @@ async function transferYap() {
   await gecmisYukle();
 }
 
+  const MARKET_LISTESI = {
+  "mac_sonucu": ["Maç Sonucu (1X2)", "Çifte Şans", "Çifte Şans ve Toplam Alt/Üst", "Handikap", "Herhangi Bir Yarıyı Kazanır", "Geriye Düşüp Berabere Biter", "Geriden Gelip Kazanır"],
+  "gol": ["Toplam Gol Üst/Alt", "KG Var/Yok", "Toplam Gol Aralığı", "Ev Gol Aralığı", "Dep Gol Aralığı", "Ev Gol Yer", "Dep Gol Yer", "Gol Yemeden Kazanır"],
+  "ilk_ikinci_yari": ["İlk Yarı Sonucu", "İkinci Yarı Sonucu", "İlk Yarı Gol", "İkinci Yarı Gol", "Her İki Yarıda Gol", "Her İki Yarıda 1.5 Üst"],
+  "takim_bazli": ["Ev Her İki Yarıda Gol Atar", "Dep Her İki Yarıda Gol Atar", "Ev İlk Yarı Gol", "Dep İlk Yarı Gol", "Ev İkinci Yarı Gol", "Dep İkinci Yarı Gol", "Ev Galibiyet + Üst", "Dep Galibiyet + Üst"],
+  "korner": ["Toplam Korner", "İlk Yarı Korner", "Takım Korner", "Korner Handikap"],
+  "kart": ["Toplam Kart", "Takım Kart", "Kırmızı Kart", "İlk Yarı Kart"],
+  "zaman_bazli": ["İlk 10 Dk Gol", "15-30 Dk Arası Gol", "Son 15 Dk Gol", "Maçın Geri Kalanını Kazanır"],
+  "ozel_oyuncu": ["Gol Atacak Oyuncu", "İlk Golü Atan Oyuncu", "Penaltı Olur mu", "VAR Kararı", "Ofsayt Gol", "Kendi Kalesine Gol"],
+  "toplam_istatistik": ["Toplam Şut", "İsabetli Şut", "Ofsayt Sayısı"],
+  "turnuva": ["Kupa Kazananı", "Finalist", "Çeyrek Final / Yarı Final", "Gruplardan Çıkma"],
+  "diger": ["Uzatmalara Gider", "Penaltılara Gider"]
+};
+
+function altMarketGuncelle() {
+  const kategori = document.getElementById("yeniKategori").value;
+  const altMarketSelect = document.getElementById("yeniAltMarket");
+  altMarketSelect.innerHTML = "";
+
+  if (!kategori || !MARKET_LISTESI[kategori]) {
+    altMarketSelect.innerHTML = '<option value="">Önce kategori seçin...</option>';
+    return;
+  }
+
+  altMarketSelect.innerHTML = '<option value="">Seçiniz...</option>';
+  MARKET_LISTESI[kategori].forEach(function(m) {
+    const opt = document.createElement("option");
+    opt.value = m;
+    opt.textContent = m;
+    altMarketSelect.appendChild(opt);
+  });
+}
 async function bahisEkle() {
   const mac = document.getElementById("yeniMac").value.trim();
-  const market = document.getElementById("yeniMarket").value.trim();
-  const oran = parseFloat(document.getElementById("yeniOran").value);
-  const tutar = parseFloat(document.getElementById("yeniTutar").value);
-  const kaynak = document.getElementById("yeniKaynak").value;
+const kategori = document.getElementById("yeniKategori").value;
+const altMarket = document.getElementById("yeniAltMarket").value;
+const marketDetay = document.getElementById("yeniMarket").value.trim();
+const market = altMarket + (marketDetay ? " — " + marketDetay : "");
+const oran = parseFloat(document.getElementById("yeniOran").value);
+const tutar = parseFloat(document.getElementById("yeniTutar").value);
+const kaynak = document.getElementById("yeniKaynak").value;
 
-  if (!mac || !market || !oran || !tutar) { hataGoster("Lütfen tüm alanları doldurun."); return; }
+  if (!mac || !kategori || !altMarket || !oran || !tutar) { hataGoster("Lütfen tüm alanları doldurun (kategori ve alt market dahil)."); return; }
 
   const { data: ayar, error: aErr } = await client.from("ayarlar").select("*").eq("id", 1).single();
   if (aErr) { hataGoster("Ayar okuma: " + aErr.message); return; }
@@ -371,6 +406,7 @@ async function bahisEkle() {
   const { error: bErr } = await client.from("bankroll").insert({
     mac: mac,
     market: market,
+    market_kategori: kategori,
     oran: oran,
     amount: -tutar,
     transaction_type: "bahis",
