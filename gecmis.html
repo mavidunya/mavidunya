@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mavidunya - İşlem Geçmişi</title>
+<style>
+body{font-family:Arial,sans-serif;background:linear-gradient(135deg,#1e3c72,#2a5298);color:#fff;margin:0;padding:15px;min-height:100vh}
+.kapsayici{max-width:600px;margin:0 auto}
+h1{font-size:1.6em;text-align:center;margin:10px 0}
+.geri{background:rgba(255,255,255,0.15);color:#fff;border:none;padding:8px 15px;border-radius:8px;font-size:0.9em;cursor:pointer;margin-bottom:10px}
+.bolum{background:rgba(255,255,255,0.08);padding:15px;border-radius:15px;margin-bottom:15px}
+.bolum h2{font-size:1.1em;margin:0 0 12px 0;opacity:0.95}
+.toplam-varlik{background:rgba(74,222,128,0.2);border:2px solid #4ade80;padding:15px;border-radius:12px;margin-bottom:15px;text-align:center;font-size:1.1em;font-weight:bold}
+.toplam-varlik span{color:#4ade80;font-size:1.3em;display:block;margin-top:5px}
+label{display:block;font-size:0.85em;opacity:0.85;margin:8px 0 4px 0}
+input,select{width:100%;padding:10px;border-radius:8px;border:none;font-size:1em;box-sizing:border-box;background:rgba(255,255,255,0.95);color:#000}
+.buton{width:100%;padding:12px;border-radius:10px;border:none;font-weight:bold;font-size:1em;cursor:pointer;margin-top:10px}
+.btn-yesil{background:#4ade80;color:#064e3b}
+.btn-mavi{background:#3b82f6;color:#fff}
+.btn-mavi:hover{background:#2563eb}
+.btn-gri{background:#64748b;color:#fff}
+.btn-gri:hover{background:#475569}
+.btn-kirmizi{background:#ef4444;color:#fff}
+.islem{background:rgba(255,255,255,0.06);padding:10px;border-radius:10px;margin-bottom:8px;font-size:0.85em}
+.islem .satir1{display:flex;justify-content:space-between;margin-bottom:4px}
+.islem .mac{font-weight:bold}
+.islem .durum{font-size:0.8em;padding:2px 8px;border-radius:10px;display:inline-block}
+.durum-bekliyor{background:#fbbf24;color:#000}
+.durum-kazandi{background:#4ade80;color:#064e3b}
+.durum-kaybetti{background:#ef4444;color:#fff}
+.durum-transfer{background:#3b82f6;color:#fff}
+.hata{background:#fbbf24;color:#000;padding:10px;border-radius:10px;margin-top:10px;font-size:0.85em;display:none;word-break:break-word}
+.bos{opacity:0.6;text-align:center;padding:15px;font-size:0.9em}
+.sayfalama{display:flex;justify-content:space-between;align-items:center;margin-top:15px;gap:10px}
+.sayfalama .buton{margin-top:0;flex:1}
+.sayfalama span{font-size:0.9em;text-align:center;flex:1}
+</style>
+</head>
+<body>
+<div class="kapsayici">
+
+<button class="geri" onclick="window.location.href='kasa.html'">← Kasa'ya Dön</button>
+<h1>📜 İşlem Geçmişi</h1>
+<div id="debug" class="hata"></div>
+
+<!-- TOPLAM VARLIK -->
+<div class="toplam-varlik">
+📊 TOPLAM VARLIK: <span id="toplamVarlik">0 TL</span>
+</div>
+
+<!-- FİLTRELER -->
+<div class="bolum">
+<h2>🔍 Filtreler</h2>
+
+<label>Tarih Aralığı</label>
+<select id="filtreTarih">
+<option value="tumu">Tümü</option>
+<option value="hafta">Bu Hafta</option>
+<option value="ay">Bu Ay</option>
+</select>
+
+<label>Durum</label>
+<select id="filtreDurum">
+<option value="tumu">Tümü</option>
+<option value="bekliyor">⏳ Bekliyor</option>
+<option value="kazandi">✅ Kazandı</option>
+<option value="kaybetti">❌ Kaybetti</option>
+<option value="transfer">💸 Transfer</option>
+</select>
+
+<label>Kişi</label>
+<select id="filtreKisi">
+<option value="tumu">Tümü</option>
+<option value="hasan">🔵 Hasan</option>
+<option value="hakan">🟢 Hakan</option>
+</select>
+
+<label>Kasa Tipi</label>
+<select id="filtreKasa">
+<option value="tumu">Tümü</option>
+<option value="ana_kasa">💰 Ana Kasa</option>
+<option value="aktif_rolling">⚡ Aktif Rolling</option>
+<option value="yedek_kasa">🔒 Yedek Kasa</option>
+<option value="kilitli_kar">🔐 Kilitli Kâr</option>
+</select>
+
+<label>Seri No</label>
+<input type="number" id="filtreSeri" placeholder="Örn: 5">
+
+<button class="buton btn-mavi" onclick="filtrele()">🔍 Filtrele</button>
+<button class="buton btn-gri" onclick="filtreleriTemizle()">🔄 Temizle</button>
+</div>
+
+<!-- İŞLEM LİSTESİ -->
+<div class="bolum">
+<h2>📋 İşlemler</h2>
+<div id="islemListe">Yükleniyor...</div>
+<div class="sayfalama">
+<button class="buton btn-gri" id="oncekiBtn" onclick="oncekiSayfa()">← Önceki</button>
+<span id="sayfaBilgi">Sayfa 1</span>
+<button class="buton btn-gri" id="sonrakiBtn" onclick="sonrakiSayfa()">Sonraki →</button>
+</div>
+</div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+const SUPABASE_URL = "https://bwdoiltmkrqfxqknedih.supabase.co";
+const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ3ZG9pbHRta3JxZnhxa25lZGloIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA0NTkzNjcsImV4cCI6MjEwNjAzNTM2N30.mx1O66LItD6Q6ED1Z75YzGXW7ijSDUVAl9R2df4Km8o";
+const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+let sayfa = 1;
+const SAYFA_BOYUT = 30;
+let toplamKayit = 0;
+let mevcutFiltreler = { tarih: "tumu", durum: "tumu", kisi: "tumu", kasa: "tumu", seri: "" };
+
+function tlFormat(n) {
+  return new Intl.NumberFormat('tr-TR', {maximumFractionDigits: 2}).format(n) + " TL";
+}
+
+function tarihFormat(t) {
+  return new Date(t).toLocaleString('tr-TR', {day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
+}
+
+function hataGoster(m) {
+  const el = document.getElementById("debug");
+  el.style.display = "block";
+  el.textContent = "DEBUG: " + m;
+  setTimeout(() => { el.style.display = "none"; }, 8000);
+}
+
+async function kontrol() {
+  const { data: { session } } = await client.auth.getSession();
+  if (!session) { window.location.href = "login.html"; return; }
+  await toplamVarlikYukle();
+  await islemleriYukle();
+}
+
+async function toplamVarlikYukle() {
+  const { data: ayar } = await client.from("ayarlar").select("*").eq("id", 1).single();
+  if (ayar) {
+    const ana = parseFloat(ayar.ana_kasa) || 0;
+    const yedek = parseFloat(ayar.yedek_kasa) || 0;
+    const aktif = parseFloat(ayar.aktif_rolling) || 0;
+    const kilit = parseFloat(ayar.kilitli_kar) || 0;
+    const toplam = ana + yedek + aktif + kilit;
+    document.getElementById("toplamVarlik").textContent = tlFormat(toplam);
+  }
+}
+
+function filtrele() {
+  mevcutFiltreler.tarih = document.getElementById("filtreTarih").value;
+  mevcutFiltreler.durum = document.getElementById("filtreDurum").value;
+  mevcutFiltreler.kisi = document.getElementById("filtreKisi").value;
+  mevcutFiltreler.kasa = document.getElementById("filtreKasa").value;
+  mevcutFiltreler.seri = document.getElementById("filtreSeri").value;
+  sayfa = 1;
+  islemleriYukle();
+}
+
+function filtreleriTemizle() {
+  document.getElementById("filtreTarih").value = "tumu";
+  document.getElementById("filtreDurum").value = "tumu";
+  document.getElementById("filtreKisi").value = "tumu";
+  document.getElementById("filtreKasa").value = "tumu";
+  document.getElementById("filtreSeri").value = "";
+  mevcutFiltreler = { tarih: "tumu", durum: "tumu", kisi: "tumu", kasa: "tumu", seri: "" };
+  sayfa = 1;
+  islemleriYukle();
+}
+
+async function islemleriYukle() {
+  let sorgu = client.from("bankroll").select("*", { count: "exact" });
+
+  if (mevcutFiltreler.durum !== "tumu") {
+    sorgu = sorgu.eq("bahis_durumu", mevcutFiltreler.durum);
+  }
+
+  if (mevcutFiltreler.kasa !== "tumu") {
+    sorgu = sorgu.eq("kasa_tipi", mevcutFiltreler.kasa);
+  }
+
+  if (mevcutFiltreler.seri && mevcutFiltreler.seri !== "") {
+    sorgu = sorgu.eq("seri_no", parseInt(mevcutFiltreler.seri));
+  }
+
+  if (mevcutFiltreler.tarih === "hafta") {
+    const birHaftaOnce = new Date();
+    birHaftaOnce.setDate(birHaftaOnce.getDate() - 7);
+    sorgu = sorgu.gte("created_at", birHaftaOnce.toISOString());
+  } else if (mevcutFiltreler.tarih === "ay") {
+    const birAyOnce = new Date();
+    birAyOnce.setMonth(birAyOnce.getMonth() - 1);
+    sorgu = sorgu.gte("created_at", birAyOnce.toISOString());
+  }
+
+  const baslangic = (sayfa - 1) * SAYFA_BOYUT;
+  const bitis = baslangic + SAYFA_BOYUT - 1;
+
+  sorgu = sorgu.order("created_at", { ascending: false }).range(baslangic, bitis);
+
+  const { data, error, count } = await sorgu;
+
+  if (error) { hataGoster("Yükleme: " + error.message); return; }
+
+  toplamKayit = count || 0;
+
+  const liste = document.getElementById("islemListe");
+
+  if (!data || data.length === 0) {
+    liste.innerHTML = '<div class="bos">Kayıt bulunamadı.</div>';
+  } else {
+    liste.innerHTML = data.map(function(k) {
+      const tarih = tarihFormat(k.created_at);
+      let durumClass = "durum-bekliyor";
+      let durumText = "⏳ BEKLİYOR";
+      if (k.bahis_durumu === "kazandi") { durumClass = "durum-kazandi"; durumText = "✅ KAZANDI"; }
+      else if (k.bahis_durumu === "kaybetti") { durumClass = "durum-kaybetti"; durumText = "❌ KAYBETTİ"; }
+      else if (k.bahis_durumu === "transfer") { durumClass = "durum-transfer"; durumText = "💸 TRANSFER"; }
+      return '<div class="islem">' +
+        '<div class="satir1"><span class="mac">' + (k.mac || "-") + '</span><span>' + tarih + '</span></div>' +
+        '<div>' + (k.market || "-") + ' | Oran: ' + (k.oran || "-") + ' | ' + tlFormat(Math.abs(k.amount || 0)) + '</div>' +
+        '<div class="satir1"><span>Seri ' + (k.seri_no || "-") + ', Adım ' + (k.adim_no || "-") + '</span><span class="durum ' + durumClass + '">' + durumText + '</span></div>' +
+        '</div>';
+    }).join("");
+  }
+
+  const toplamSayfa = Math.ceil(toplamKayit / SAYFA_BOYUT) || 1;
+  document.getElementById("sayfaBilgi").textContent = "Sayfa " + sayfa + " / " + toplamSayfa;
+  document.getElementById("oncekiBtn").disabled = sayfa <= 1;
+  document.getElementById("sonrakiBtn").disabled = sayfa >= toplamSayfa;
+}
+
+function oncekiSayfa() {
+  if (sayfa > 1) { sayfa--; islemleriYukle(); }
+}
+
+function sonrakiSayfa() {
+  const toplamSayfa = Math.ceil(toplamKayit / SAYFA_BOYUT) || 1;
+  if (sayfa < toplamSayfa) { sayfa++; islemleriYukle(); }
+}
+
+kontrol();
+</script>
+</body>
+</html>
