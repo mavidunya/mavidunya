@@ -177,10 +177,18 @@ async function kontrol() {
 async function kasaYukle() {
   const { data: ayar } = await client.from("ayarlar").select("*").eq("id", 1).single();
   if (ayar) {
-    document.getElementById("anaKasa").textContent = tlFormat(parseFloat(ayar.ana_kasa) || 0);
-    document.getElementById("yedekKasa").textContent = tlFormat(parseFloat(ayar.yedek_kasa) || 0);
-    document.getElementById("aktifRolling").textContent = tlFormat(parseFloat(ayar.aktif_rolling) || 0);
-    document.getElementById("kilitliKar").textContent = tlFormat(parseFloat(ayar.kilitli_kar) || 0);
+    const ana = parseFloat(ayar.ana_kasa) || 0;
+    const yedek = parseFloat(ayar.yedek_kasa) || 0;
+    const aktif = parseFloat(ayar.aktif_rolling) || 0;
+    const kilit = parseFloat(ayar.kilitli_kar) || 0;
+
+    document.getElementById("anaKasa").textContent = tlFormat(ana);
+    document.getElementById("yedekKasa").textContent = tlFormat(yedek);
+    document.getElementById("aktifRolling").textContent = tlFormat(aktif);
+    document.getElementById("kilitliKar").textContent = tlFormat(kilit);
+
+    const toplam = ana + yedek + aktif + kilit;
+    document.getElementById("toplamVarlik").textContent = tlFormat(toplam);
   }
 }
 
