@@ -102,6 +102,12 @@ input,select{width:100%;padding:10px;border-radius:8px;border:none;font-size:1em
 <!-- YENİ BAHİS -->
 <div class="bolum">
 <h2>➕ Yeni Bahis Ekle</h2>
+<label>Ev Sahibi Takım</label>
+<input type="text" id="yeniEvSahibi" placeholder="Örn: Juventus">
+
+<label>Deplasman Takımı</label>
+<input type="text" id="yeniDeplasman" placeholder="Örn: Parma">
+
 <label>Market Kategorisi</label>
 <select id="yeniKategori" onchange="altMarketGuncelle()">
 <option value="">Seçiniz...</option>
@@ -123,8 +129,15 @@ input,select{width:100%;padding:10px;border-radius:8px;border:none;font-size:1em
 <option value="">Önce kategori seçin...</option>
 </select>
 
-<label>Market Detayı (opsiyonel)</label>
-<input type="text" id="yeniMarket" placeholder="Örn: 2.5 üst, 9.5 üst">
+<label>Değer</label>
+<input type="text" id="yeniDeger" placeholder="Örn: 2.5, 9.5, 1.5">
+
+<label>Yön</label>
+<select id="yeniYon">
+<option value="üst">Üst</option>
+<option value="alt">Alt</option>
+<option value="yok">Yok (sabit bahis)</option>
+</select>
 <label>Oran</label>
 <input type="number" id="yeniOran" step="0.01" placeholder="Örn: 1.85">
 <label>Tutar (TL)</label>
@@ -355,16 +368,20 @@ function altMarketGuncelle() {
   });
 }
 async function bahisEkle() {
-  const mac = document.getElementById("yeniMac").value.trim();
+  const evSahibi = document.getElementById("yeniEvSahibi").value.trim();
+const deplasman = document.getElementById("yeniDeplasman").value.trim();
+const mac = evSahibi + " - " + deplasman;
 const kategori = document.getElementById("yeniKategori").value;
 const altMarket = document.getElementById("yeniAltMarket").value;
-const marketDetay = document.getElementById("yeniMarket").value.trim();
+const deger = document.getElementById("yeniDeger").value.trim();
+const yon = document.getElementById("yeniYon").value;
+const marketDetay = (deger && yon !== "yok") ? (deger + " " + yon) : (deger || "");
 const market = altMarket + (marketDetay ? " — " + marketDetay : "");
 const oran = parseFloat(document.getElementById("yeniOran").value);
 const tutar = parseFloat(document.getElementById("yeniTutar").value);
 const kaynak = document.getElementById("yeniKaynak").value;
 
-  if (!mac || !kategori || !altMarket || !oran || !tutar) { hataGoster("Lütfen tüm alanları doldurun (kategori ve alt market dahil)."); return; }
+  if (!evSahibi || !deplasman || !kategori || !altMarket || !oran || !tutar) { hataGoster("Lütfen tüm alanları doldurun (takımlar, kategori ve alt market dahil)."); return; }
 
   const { data: ayar, error: aErr } = await client.from("ayarlar").select("*").eq("id", 1).single();
   if (aErr) { hataGoster("Ayar okuma: " + aErr.message); return; }
@@ -405,6 +422,9 @@ const kaynak = document.getElementById("yeniKaynak").value;
 
   const { error: bErr } = await client.from("bankroll").insert({
     mac: mac,
+   ev_sahibi: evSahibi,
+deplasman: deplasman,
+market_detay: marketDetay,
     market: market,
     market_kategori: kategori,
     oran: oran,
@@ -422,8 +442,10 @@ const kaynak = document.getElementById("yeniKaynak").value;
 
   if (bErr) { hataGoster("Bahis ekleme: " + bErr.message); return; }
 
-  document.getElementById("yeniMac").value = "";
-  document.getElementById("yeniMarket").value = "";
+  document.getElementById("yeniEvSahibi").value = "";
+document.getElementById("yeniDeplasman").value = "";
+document.getElementById("yeniDeger").value = "";
+document.getElementById("yeniYon").value = "üst";
   document.getElementById("yeniOran").value = "";
   document.getElementById("yeniTutar").value = "";
 
