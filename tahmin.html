@@ -138,23 +138,62 @@ function promptOlustur(mac) {
 }
 
 async function geminiTahmin(prompt) {
-  const url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=" + aiAnahtarlari.gemini;
+  const modeller = [
+    "gemini-flash-latest",
+    "gemini-2.5-flash",
+    "gemini-2.0-flash"
+  ];
+  
   const body = {
     contents: [{ parts: [{ text: prompt }] }],
     generationConfig: { temperature: 0.7, maxOutputTokens: 2000 }
   };
-  const r = await fetch(url, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body)
-  });
-  if (!r.ok) {
-    const errText = await r.text();
-    throw new Error("Gemini hatası: " + r.status + " - " + errText.substring(0, 200));
+
+  for (const model of modeller) {
+    for (let deneme = 1; deneme <= 2; deneme++) {
+      try {
+        const url = "https://generativelanguage.googleapis.com/v1beta/models/" + model + ":generateContent?key=" + aiAnahtarlari.gemini;
+        const r = await fetch(url, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body)
+        });
+        
+        if (r.ok) {
+          const data = await r.json();
+          const text = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
+          if (text) {
+            return text;
+          }
+        }
+        
+        // 503 / 429 / 404 → sonraki modeli dene
+        const hataKodu = r.status;
+        if (hataKodu === 503 || hataKodu === 429 || hataKodu === 404) {
+          // 2 saniye bekle, tekrar dene
+          if (deneme < 2) {
+            await new Promise(resolve => setTimeout(resolve, 2000));
+            continue;
+          }
+          // 2. deneme de başarısızsa sonraki modeli dene
+          break;
+        }
+        
+        // Diğer hatalar → hemen dur
+        const errText = await r.text();
+        throw new Error("Gemini hatası (" + model + "): " + r.status + " - " + errText.substring(0, 150));
+        
+      } catch (e) {
+        if (deneme === 2) {
+          // Bu model de başarısız, sonrakine geç
+          break;
+        }
+        await new Promise(resolve => setTimeout(resolve, 2000));
+      }
+    }
   }
-  const data = await r.json();
-  const text = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
-  return text;
+  
+  throw new Error("Tüm Gemini modelleri yoğun. Lütfen tekrar deneyin veya Groq sonucunu kullanın.");
 }
 
 async function groqTahmin(prompt) {
