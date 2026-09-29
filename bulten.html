@@ -280,11 +280,12 @@ async function footballFikstur(macSayisi, tarih) {
   // Ücretsiz katmanda izin verilen ligler
   const ligler = ["PL", "PD", "SA", "BL1", "FL1", "DED", "PPL", "CL"];
   
-  const tarihObj = new Date(tarih.split(".").reverse().join("-"));
-  const tarihStr = tarihObj.toISOString().split("T")[0];
-  const tarihSonraki = new Date(tarihObj);
-  tarihSonraki.setDate(tarihSonraki.getDate() + 1);
-  const tarihSonrakiStr = tarihSonraki.toISOString().split("T")[0];
+const parcalar = tarih.split(".");
+const tarihStr = parcalar[2] + "-" + parcalar[1] + "-" + parcalar[0];
+const tarihObj = new Date(tarihStr);
+tarihObj.setDate(tarihObj.getDate() + 1);
+const tarihSonrakiStr = tarihObj.toISOString().split("T")[0];
+hataGoster("Aranan tarih: " + tarihStr + " → " + tarihSonrakiStr);
 
   const tumMaclar = [];
 
