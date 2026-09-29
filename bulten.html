@@ -295,7 +295,7 @@ hataGoster("Aranan tarih: " + tarihStr + " → " + tarihSonrakiStr);
       const r = await fetch(url, {
         headers: { "X-Auth-Token": aiAnahtarlari.football }
       });
-      if (!r.ok) { hataGoster("Lig " + lig + " hata: " + r.status); continue; }
+      if (!r.ok) { tumHatalar.push(lig + ":" + r.status); continue; }
       const data = await r.json();
       if (data.matches && Array.isArray(data.matches)) {
         for (const m of data.matches) {
