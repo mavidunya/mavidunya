@@ -294,7 +294,7 @@ async function footballFikstur(macSayisi, tarih) {
       const r = await fetch(url, {
         headers: { "X-Auth-Token": aiAnahtarlari.football }
       });
-      if (!r.ok) continue;
+      if (!r.ok) { hataGoster("Lig " + lig + " hata: " + r.status); continue; }
       const data = await r.json();
       if (data.matches && Array.isArray(data.matches)) {
         for (const m of data.matches) {
