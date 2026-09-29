@@ -391,7 +391,8 @@ function jsonCikar(text) {
   }
 }
 
-async function analizBaslat() {
+  async function analizBaslat() {
+  console.log("analizBaslat başladı");
   const macSayisi = parseInt(document.getElementById("macSayisi").value);
   if (!mevcutTarihTipi && !mevcutTarih) {
     hataGoster("Lütfen tarih seçin (Bugün / Yarın / Bu Hafta / Takvim).");
@@ -404,7 +405,6 @@ async function analizBaslat() {
 
   const tarih = tarihMetniOlustur();
   const grupBoyut = 8;
-  const toplamGrup = Math.ceil(macListesi.length / grupBoyut);
 // ÖNCE: football-data.org'dan fikstür çek
 document.getElementById("ilerlemeMetin").textContent = "Football-data'dan maçlar çekiliyor...";
 document.getElementById("ilerlemeDetay").textContent = "Bu işlem 1-2 dakika sürebilir";
@@ -412,6 +412,7 @@ document.getElementById("ilerlemeDetay").textContent = "Bu işlem 1-2 dakika sü
 let macListesi = [];
 try {
   macListesi = await footballFikstur(macSayisi, tarih);
+  const toplamGrup = Math.ceil(macListesi.length / grupBoyut);
   document.getElementById("ilerlemeDetay").textContent = macListesi.length + " maç bulundu. AI analizi başlıyor...";
 } catch (e) {
   hataGoster("Fikstür hatası: " + e.message);
