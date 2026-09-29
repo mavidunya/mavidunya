@@ -193,11 +193,12 @@ async function kontrol() {
 }
 
 async function aiAnahtarlariniYukle() {
-  const { data, error } = await client.from("ai_ayarlar").select("gemini_key, groq_key").eq("id", 1).single();
+  const { data, error } = await client.from("ai_ayarlar").select("gemini_key, groq_key, football_data_key").eq("id", 1).single();
   if (error) { hataGoster("AI anahtar: " + error.message); return; }
   if (data) {
     aiAnahtarlari.gemini = data.gemini_key;
     aiAnahtarlari.groq = data.groq_key;
+    aiAnahtarlari.football = data.football_data_key;
   }
 }
 
@@ -270,7 +271,54 @@ function promptOlustur(tarih, macSayisi, grupNo, toplamGrup) {
   p += '"ortak_karar":"...","guven":84,"durum":"one_cikan"}]}';
   return p;
 }
+async function footballFikstur(macSayisi, tarih) {
+  // football-data.org'dan maç listesi çek
+  if (!aiAnahtarlari.football) {
+    throw new Error("Football-data anahtarı yok.");
+  }
 
+  // Ücretsiz katmanda izin verilen ligler
+  const ligler = ["PL", "PD", "SA", "BL1", "FL1", "DED", "PPL", "CL"];
+  
+  const tarihObj = new Date(tarih.split(".").reverse().join("-"));
+  const tarihStr = tarihObj.toISOString().split("T")[0];
+  const tarihSonraki = new Date(tarihObj);
+  tarihSonraki.setDate(tarihSonraki.getDate() + 1);
+  const tarihSonrakiStr = tarihSonraki.toISOString().split("T")[0];
+
+  const tumMaclar = [];
+
+  for (const lig of ligler) {
+    try {
+      const url = "https://api.football-data.org/v4/competitions/" + lig + "/matches?dateFrom=" + tarihStr + "&dateTo=" + tarihSonrakiStr;
+      const r = await fetch(url, {
+        headers: { "X-Auth-Token": aiAnahtarlari.football }
+      });
+      if (!r.ok) continue;
+      const data = await r.json();
+      if (data.matches && Array.isArray(data.matches)) {
+        for (const m of data.matches) {
+          tumMaclar.push({
+            ev_sahibi: m.homeTeam?.name || "?",
+            deplasman: m.awayTeam?.name || "?",
+            lig: data.competition?.name || lig,
+            saat: m.utcDate ? new Date(m.utcDate).toLocaleTimeString('tr-TR', {hour:'2-digit',minute:'2-digit'}) : "?",
+            tarih: m.utcDate
+          });
+        }
+      }
+      // Rate limit: 10 istek/dakika
+      await new Promise(res => setTimeout(res, 6500));
+    } catch (e) {
+      console.warn("Lig " + lig + " hata:", e.message);
+    }
+  }
+
+  // Maçları sırala ve sınırla
+  tumMaclar.sort((a, b) => new Date(a.tarih) - new Date(b.tarih));
+  return tumMaclar.slice(0, macSayisi);
+}
+  
 async function geminiCagir(prompt) {
   const modeller = ["gemini-flash-latest", "gemini-2.5-flash", "gemini-2.0-flash"];
   const body = {
@@ -356,8 +404,29 @@ async function analizBaslat() {
 
   const tarih = tarihMetniOlustur();
   const grupBoyut = 8;
-  const toplamGrup = Math.ceil(macSayisi / grupBoyut);
+  const toplamGrup = Math.ceil(macListesi.length / grupBoyut);
+// ÖNCE: football-data.org'dan fikstür çek
+document.getElementById("ilerlemeMetin").textContent = "Football-data'dan maçlar çekiliyor...";
+document.getElementById("ilerlemeDetay").textContent = "Bu işlem 1-2 dakika sürebilir";
 
+let macListesi = [];
+try {
+  macListesi = await footballFikstur(macSayisi, tarih);
+  document.getElementById("ilerlemeDetay").textContent = macListesi.length + " maç bulundu. AI analizi başlıyor...";
+} catch (e) {
+  hataGoster("Fikstür hatası: " + e.message);
+  document.getElementById("ilerlemeBolum").style.display = "none";
+  document.getElementById("analizBtn").disabled = false;
+  return;
+}
+
+if (macListesi.length === 0) {
+  hataGoster("Bu tarihte maç bulunamadı. Farklı bir tarih deneyin.");
+  document.getElementById("ilerlemeBolum").style.display = "none";
+  document.getElementById("analizBtn").disabled = false;
+  return;
+}
+  
   document.getElementById("ilerlemeBolum").style.display = "block";
   document.getElementById("filtreBolum").style.display = "none";
   document.getElementById("sonucBolum").style.display = "none";
@@ -365,15 +434,17 @@ async function analizBaslat() {
 
   tumKartlar = [];
   let hataVar = false;
-
-  for (let g = 0; g < toplamGrup; g++) {
-    const buGrupKacta = Math.min(grupBoyut, macSayisi - g * grupBoyut);
+for (let g = 0; g < toplamGrup; g++) {
+  
+  const baslangic = g * grupBoyut;
+const bitis = Math.min(baslangic + grupBoyut, macListesi.length);
+const grupMaclar = macListesi.slice(baslangic, bitis);
     const ilerleme = ((g) / toplamGrup) * 100;
     document.getElementById("ilerlemeDolgu").style.width = ilerleme + "%";
     document.getElementById("ilerlemeMetin").textContent = "Grup " + (g + 1) + "/" + toplamGrup + " analiz ediliyor...";
-    document.getElementById("ilerlemeDetay").textContent = "Bu grupta " + buGrupKacta + " maç";
+    document.getElementById("ilerlemeDetay").textContent = "Bu grupta " + grupMaclar.length + " maç";
 
-    const prompt = promptOlustur(tarih, buGrupKacta, g + 1, toplamGrup);
+    const prompt = promptOlustur(tarih, grupMaclar, g + 1, toplamGrup);
 
     try {
       const yanit = await geminiCagir(prompt);
