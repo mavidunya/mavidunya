@@ -288,7 +288,8 @@ const tarihSonrakiStr = tarihObj.toISOString().split("T")[0];
 hataGoster("Aranan tarih: " + tarihStr + " → " + tarihSonrakiStr);
 
   const tumMaclar = [];
-
+  const tumHatalar = [];
+  
   for (const lig of ligler) {
     try {
       const url = "https://api.football-data.org/v4/competitions/" + lig + "/matches?dateFrom=" + tarihStr + "&dateTo=" + tarihSonrakiStr;
@@ -317,6 +318,7 @@ hataGoster("Aranan tarih: " + tarihStr + " → " + tarihSonrakiStr);
 
   // Maçları sırala ve sınırla
   tumMaclar.sort((a, b) => new Date(a.tarih) - new Date(b.tarih));
+  hataGoster("Hatalı ligler: " + (tumHatalar.length > 0 ? tumHatalar.join(", ") : "yok") + " | Bulunan maç: " + tumMaclar.length);
   return tumMaclar.slice(0, macSayisi);
 }
   
