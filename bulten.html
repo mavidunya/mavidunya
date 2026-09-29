@@ -85,7 +85,7 @@ input,select{width:100%;padding:10px;border-radius:8px;border:none;font-size:1em
 
 <label style="margin-top:12px">Kaç maç analiz edilsin?</label>
 <select id="macSayisi">
-<option value="5">5 maç (hızlı test)</option>
+<option value="5">5 maç</option>
 <option value="10">10 maç</option>
 <option value="15">15 maç</option>
 <option value="18">18 maç</option>
@@ -288,7 +288,8 @@ const tarihSonrakiStr = tarihObj.toISOString().split("T")[0];
 hataGoster("Aranan tarih: " + tarihStr + " → " + tarihSonrakiStr);
 
   const tumMaclar = [];
-  const tumHatalar = [];
+const tumHatalar = [];
+hataGoster("Fikstür başladı. Ligler: " + ligler.length);
   
   for (const lig of ligler) {
     try {
@@ -396,7 +397,11 @@ function jsonCikar(text) {
 
   async function analizBaslat() {
   console.log("analizBaslat başladı");
-  const macSayisi = parseInt(document.getElementById("macSayisi").value);
+  document.getElementById("ilerlemeBolum").style.display = "block";
+document.getElementById("ilerlemeMetin").textContent = "Analiz başlatılıyor...";
+document.getElementById("ilerlemeDetay").textContent = "Lütfen bekleyin";
+document.getElementById("analizBtn").disabled = true;
+    const macSayisi = parseInt(document.getElementById("macSayisi").value);
   if (!mevcutTarihTipi && !mevcutTarih) {
     hataGoster("Lütfen tarih seçin (Bugün / Yarın / Bu Hafta / Takvim).");
     return;
