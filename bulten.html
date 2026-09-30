@@ -16,6 +16,8 @@
     .buton{width:100%;padding:14px;border-radius:10px;border:none;font-weight:bold;font-size:1.05em;cursor:pointer;margin-top:10px}
     .btn-mor{background:#8b5cf6;color:#fff}
     .btn-mor:hover{background:#7c3aed}
+    .btn-mavi{background:#3b82f6;color:#fff}
+    .btn-mavi:hover{background:#2563eb}
     .btn-gri{background:#64748b;color:#fff}
     .btn-gri:hover{background:#475569}
     .tarih-butonlar{display:flex;gap:8px;margin-top:8px;flex-wrap:wrap}
@@ -57,6 +59,7 @@
     .son-analiz{background:rgba(255,255,255,0.06);padding:10px;border-radius:10px;margin-bottom:8px;font-size:0.85em}
     .son-analiz .tarih{opacity:0.75;font-size:0.8em}
     .son-analiz .ozet{margin-top:4px}
+    .buton-grubu{display:flex;flex-direction:column;gap:8px;margin-top:10px;}
   </style>
 </head>
 <body>
@@ -80,23 +83,26 @@
 
       <label>Kaç maç analiz edilsin?</label>
       <select id="macSayisi">
-        <option value="5">5 maç</option>
-        <option value="10" selected>10 maç</option>
+        <option value="5" selected>5 maç</option>
+        <option value="10">10 maç</option>
         <option value="15">15 maç</option>
         <option value="20">20 maç</option>
-        <option value="30">30 maç</option>
       </select>
 
-      <button id="analizBtn" class="buton btn-mor" onclick="analizBaslat()">📊 Analizi Başlat</button>
+      <div class="buton-grubu">
+        <button id="analizBtnAI" class="buton btn-mor" onclick="analizBaslat('ai')">🌐 AI Web Araması ile Analiz Et</button>
+        <button id="analizBtnFB" class="buton btn-mavi" onclick="analizBaslat('football')">⚽ Fikstür API ile Analiz Et</button>
+      </div>
+
       <div id="debug" class="hata"></div>
       <div id="basari" class="basari"></div>
     </div>
 
-    <!-- İLERLEME SİMGE & BAR -->
+    <!-- İLERLEME -->
     <div id="ilerlemeBolum" class="bolum ilerleme">
       <div class="spinner"></div>
-      <div id="ilerlemeMetin" style="font-weight:bold;">AI düşünüyor...</div>
-      <div id="ilerlemeDetay" style="font-size:0.8em; opacity:0.8; margin-top:4px;"></div>
+      <div id="ilerlemeMetin" style="font-weight:bold;">Analiz Başlatılıyor...</div>
+      <div id="ilerlemeDetay" style="font-size:0.8em; opacity:0.8; margin-top:4px;">Lütfen bekleyin</div>
       <div class="ilerleme-bar">
         <div id="ilerlemeDolgu" class="ilerleme-dolgu"></div>
       </div>
@@ -118,7 +124,7 @@
     <div class="bolum" id="sonucBolum" style="display:none">
       <h2>📊 Analiz Sonuçları (<span id="sonucSayisi">0</span> maç)</h2>
       <div id="kartListesi"></div>
-      <button class="buton btn-gri" onclick="sonuclariTemizle()">🗑️ Sonuçları Temizle</button>
+      <button class="buton btn-gri" onclick="sonuclariTemizle()">🗑 Sonuçları Temizle</button>
     </div>
 
     <!-- SON ANALİZLER -->
@@ -128,10 +134,10 @@
     </div>
   </div>
 
-  <script src="[https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2](https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2)"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
-    const SUPABASE_URL = "https://bwdoiltmkrqfxqknedih.supabase.co";
-    const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ3ZG9pbHRta3JxZnhxa25lZGloIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA0NTkzNjcsImV4cCI6MjEwNjAzNTM2N30.mx1O66LItD6Q6ED1Z75YzGXW7ijSDUVAl9R2df4Km8o"; // Kendi tam Anon Key'iniz
+    const SUPABASE_URL = "https://bwdoiltmkrqfxqknedih.supabase.co"; 
+    const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ3ZG9pbHRta3JxZnhxa25lZGloIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA0NTkzNjcsImV4cCI6MjEwNjAzNTM2N30.mx1O66LItD6Q6ED1Z75YzGXW7ijSDUVAl9R2df4Km8o"; 
     const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
     let aiAnahtarlari = { gemini: null, groq: null, football: null };
@@ -145,17 +151,13 @@
       "Herhangi Bir Yarıyı Kazanır", "Geriye Düşüp Berabere Biter", "Geriden Gelip Kazanır", 
       "Toplam Gol Üst/Alt", "KG Var/Yok", "Toplam Gol Aralığı", "Ev Gol Aralığı", 
       "Dep Gol Aralığı", "Ev Gol Yer", "Dep Gol Yer", "Gol Yemeden Kazanır", 
-      "İlk Yarı Sonucu", "İkinci Yarı Sonucu", "İlk Yarı Gol", "İkinci Yarı Gol", 
-      "Her İki Yarıda Gol", "Her İki Yarıda 1.5 Üst", "Ev Her İki Yarıda Gol Atar", 
-      "Dep Her İki Yarıda Gol Atar", "Ev İlk Yarı Gol", "Dep İlk Yarı Gol", 
-      "Ev İkinci Yarı Gol", "Dep İkinci Yarı Gol", "Ev Galibiyet + Üst", "Dep Galibiyet + Üst"
+      "İlk Yarı Sonucu", "İkinci Yarı Sonucu", "İlk Yarı Gol", "İkinci Yarı Gol"
     ];
 
     function hataGoster(m) {
       const el = document.getElementById("debug");
       el.style.display = "block";
       el.textContent = "HATA: " + m;
-      setTimeout(() => { el.style.display = "none"; }, 12000);
     }
 
     function basariGoster(m) {
@@ -165,37 +167,10 @@
       setTimeout(() => { el.style.display = "none"; }, 4000);
     }
 
-    async function kontrol() {
-      try {
-        const { data: { session } } = await client.auth.getSession();
-        if (!session) {
-          window.location.href = "login.html";
-          return;
-        }
-        mevcutKullanici = session.user.id;
-        await aiAnahtarlariniYukle();
-        await tarihSeciciDoldur();
-        await sonAnalizleriYukle();
-      } catch (e) {
-        hataGoster("Başlatma hatası: " + e.message);
-      }
-    }
-
-    async function aiAnahtarlariniYukle() {
-      const { data, error } = await client.from("ai_ayarlar").select("gemini_key, groq_key, football_data_key").limit(1).maybeSingle();
-      if (error) {
-        hataGoster("AI anahtar yükleme hatası: " + error.message);
-        return;
-      }
-      if (data) {
-        aiAnahtarlari.gemini = data.gemini_key;
-        aiAnahtarlari.groq = data.groq_key;
-        aiAnahtarlari.football = data.football_data_key;
-      }
-    }
-
-    async function tarihSeciciDoldur() {
+    function tarihSeciciDoldur() {
       const sel = document.getElementById("tarihSecici");
+      if (!sel) return;
+      sel.innerHTML = '<option value="">Seçiniz...</option>';
       const bugun = new Date();
       for (let i = 0; i < 30; i++) {
         const d = new Date(bugun);
@@ -210,6 +185,39 @@
       }
     }
 
+    async function kontrol() {
+      tarihSeciciDoldur();
+
+      try {
+        const { data: { session } } = await client.auth.getSession();
+        if (session) {
+          mevcutKullanici = session.user.id;
+        }
+      } catch (e) {
+        console.warn("Oturum kontrol hatası:", e);
+      }
+
+      await aiAnahtarlariniYukle();
+      await sonAnalizleriYukle();
+    }
+
+    async function aiAnahtarlariniYukle() {
+      try {
+        const { data, error } = await client.from("ai_ayarlar").select("gemini_key, groq_key, football_data_key").limit(1).maybeSingle();
+        if (error) {
+          console.error("AI Ayarlar çekilemedi:", error);
+          return;
+        }
+        if (data) {
+          aiAnahtarlari.gemini = data.gemini_key;
+          aiAnahtarlari.groq = data.groq_key;
+          aiAnahtarlari.football = data.football_data_key;
+        }
+      } catch (e) {
+        console.error("Anahtar yukleme hatasi:", e);
+      }
+    }
+
     function tarihSec(tip) {
       mevcutTarihTipi = tip;
       document.querySelectorAll(".tarih-butonlar button").forEach(b => b.classList.remove("aktif"));
@@ -221,34 +229,41 @@
       }
     }
 
-    function tarihFormatYYYYMMDD() {
-      const bugun = new Date();
+    function tarihFormatYYYYMMDD(offsetGun = 0) {
+      const d = new Date();
       if (mevcutTarihTipi === "yarin") {
-        bugun.setDate(bugun.getDate() + 1);
+        d.setDate(d.getDate() + 1);
       } else if (mevcutTarihTipi === "ozel" && mevcutTarih) {
         return mevcutTarih;
       }
-      const gun = String(bugun.getDate()).padStart(2, "0");
-      const ay = String(bugun.getMonth() + 1).padStart(2, "0");
-      const yil = bugun.getFullYear();
+      if (offsetGun !== 0) {
+        d.setDate(d.getDate() + offsetGun);
+      }
+      const gun = String(d.getDate()).padStart(2, "0");
+      const ay = String(d.getMonth() + 1).padStart(2, "0");
+      const yil = d.getFullYear();
       return yil + "-" + ay + "-" + gun;
     }
 
-    // FOOTBALL-DATA.ORG TEK ISTEKLE MAÇLARI ÇEKME (API Limiti Aşmamak için)
-    async function footballFikstur(macSayisi, tarihStr) {
+    async function footballFikstur(macSayisi, tarihBaslangic) {
       if (!aiAnahtarlari.football) {
-        throw new Error("Football-data API anahtarı Supabase'de bulunamadı.");
+        throw new Error("Football-data API anahtarı Supabase tablosunda tanımlı değil.");
       }
 
-      // API Tüm maçları dateFrom ve dateTo ile tek istekte verebilir
-      const url = "[https://api.football-data.org/v4/matches?dateFrom=](https://api.football-data.org/v4/matches?dateFrom=)" + tarihStr + "&dateTo=" + tarihStr;
-      
-      const r = await fetch(url, {
+      let tarihBitis = tarihBaslangic;
+      if (mevcutTarihTipi === "hafta") {
+        tarihBitis = tarihFormatYYYYMMDD(7);
+      }
+
+      const rawUrl = "https://api.football-data.org/v4/matches?dateFrom=" + tarihBaslangic + "&dateTo=" + tarihBitis;
+      const proxyUrl = "https://corsproxy.io/?" + encodeURIComponent(rawUrl);
+
+      const r = await fetch(proxyUrl, {
         headers: { "X-Auth-Token": aiAnahtarlari.football }
       });
 
       if (!r.ok) {
-        throw new Error("API isteği başarısız! Durum Kodu: " + r.status);
+        throw new Error("Football API Hatası! Kod: " + r.status);
       }
 
       const data = await r.json();
@@ -259,48 +274,50 @@
           tumMaclar.push({
             ev_sahibi: m.homeTeam?.name || "?",
             deplasman: m.awayTeam?.name || "?",
-            lig: m.competition?.name || "Diğer Lig",
+            lig: m.competition?.name || "Lig",
             saat: m.utcDate ? new Date(m.utcDate).toLocaleTimeString('tr-TR', {hour:'2-digit',minute:'2-digit'}) : "?",
             tarih: m.utcDate
           });
         }
       }
 
-      tumMaclar.sort((a, b) => new Date(a.tarih) - new Date(b.tarih));
       return tumMaclar.slice(0, macSayisi);
     }
 
-    function promptOlustur(macListesi) {
+    function promptOlustur(macListesi, macSayisi, tarihMetni, mod) {
       const marketListesiStr = MARKET_LISTESI.join(", ");
-      let p = "Sen profesyonel bir futbol analistisin. Aşağıda verilen maç listesini ve takımların güncel durumlarını (istersen web araması yaparak) analiz et.\n\n";
-      p += "İNCELENECEK MAÇLAR:\n" + JSON.stringify(macListesi) + "\n\n";
-      p += "Her maç için 4 farklı ajanın değerlendirmesini yap:\n";
-      p += "1. Poisson Ajanı (Gol matematik olasılığı)\n";
-      p += "2. Elo Ajanı (Güç dengesi skoru)\n";
-      p += "3. Form Ajanı (Son maçlardaki ivme)\n";
-      p += "4. Taktik Ajanı (Oyun stili ve eğilimler)\n\n";
-      p += "Seçilebilecek Bahis Marketleri: " + marketListesiStr + "\n\n";
-      p += "Çıktıyı SADECE VE SADECE AŞAĞIDAKİ JSON FORMATINDA DÖN:\n";
-      p += '{"maclar":[{"ev_sahibi":"...","deplasman":"...","lig":"...","saat":"21:00",';
-      p += '"ajanlar":{"poisson":{"market":"...","guven":82,"gerekce":"..."},';
-      p += '"elo":{"market":"...","guven":75,"gerekce":"..."},';
-      p += '"form":{"market":"...","guven":85,"gerekce":"..."},';
-      p += '"taktik":{"market":"...","guven":80,"gerekce":"..."}},';
-      p += '"ortak_karar":"...","guven":84,"durum":"one_cikan"}]}';
+      let p = "Sen profesyonel bir futbol bahis ve istatistik analistisin.\n";
+
+      if (mod === "ai") {
+        p += "Tarih/Dönem: " + tarihMetni + "\n";
+        p += "Görev: Google Arama aracını kullanarak bu tarihteki oynanacak veya öne çıkan en popüler en az " + macSayisi + " futbol maçını bul.\n";
+      } else {
+        p += "Sana verilen maç listesini analiz et:\n" + JSON.stringify(macListesi) + "\n";
+      }
+
+      p += "\nHer maç için Poisson, Elo, Form ve Taktik ajanları gibi 4 farklı yaklaşımla analiz yap.\n";
+      p += "Kullanabileceğin bahis marketleri: " + marketListesiStr + "\n\n";
+      p += "YANITI SADECE AŞAĞIDAKİ GEÇERLİ JSON FORMATINDA DÖN (Açıklama, markdown veya ekstra metin ekleme):\n";
+      p += '{"maclar":[{"ev_sahibi":"...","deplasman":"...","lig":"...","saat":"21:00","ajanlar":{"poisson":{"market":"...","guven":80,"gerekce":"..."},"elo":{"market":"...","guven":75,"gerekce":"..."},"form":{"market":"...","guven":85,"gerekce":"..."},"taktik":{"market":"...","guven":80,"gerekce":"..."}},"ortak_karar":"...","guven":82,"durum":"one_cikan"}]}';
+
       return p;
     }
 
-    async function geminiCagir(prompt) {
-      const modeller = ["gemini-2.5-flash", "gemini-2.0-flash"];
+    async function geminiCagir(prompt, webAramaAktif = false) {
+      const modeller = ["gemini-1.5-flash", "gemini-2.0-flash"];
+      
       const body = {
         contents: [{ parts: [{ text: prompt }] }],
-        tools: [{ googleSearch: {} }], // Web arama özelliği aktif
         generationConfig: { temperature: 0.2 }
       };
 
+      if (webAramaAktif) {
+        body.tools = [{ google_search: {} }];
+      }
+
       for (const model of modeller) {
         try {
-          const url = "[https://generativelanguage.googleapis.com/v1beta/models/](https://generativelanguage.googleapis.com/v1beta/models/)" + model + ":generateContent?key=" + aiAnahtarlari.gemini;
+          const url = "https://generativelanguage.googleapis.com/v1beta/models/" + model + ":generateContent?key=" + aiAnahtarlari.gemini;
           const r = await fetch(url, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -313,90 +330,71 @@
             if (text) return text;
           }
         } catch (e) {
-          console.warn(model + " bağlantı hatası, sonraki modele geçiliyor...", e);
+          console.warn(model + " çağrı hatası:", e);
         }
       }
-      throw new Error("Gemini API yanıt vermedi veya anahtar hatalı.");
+      throw new Error("Gemini API yanıt vermedi veya anahtar geçersiz.");
     }
 
     function jsonCikar(text) {
       try {
-        // Markdown tırnaklarını temizleme
         let cleaned = text.replace(/```json/g, "").replace(/```/g, "").trim();
         const match = cleaned.match(/\{[\s\S]*\}/);
         let parsed = match ? JSON.parse(match[0]) : JSON.parse(cleaned);
 
         if (parsed && parsed.maclar && Array.isArray(parsed.maclar)) {
-          parsed.maclar = parsed.maclar.map(m => {
-            const ajanlar = m.ajanlar || {};
-            const normAjan = {};
-            ["poisson", "elo", "form", "taktik"].forEach(a => {
-              const src = ajanlar[a] || {};
-              normAjan[a] = {
-                market: src.market || "?",
-                guven: parseFloat(src.guven || 0),
-                gerekce: src.gerekce || ""
-              };
-            });
-            return {
-              ev_sahibi: m.ev_sahibi || "?",
-              deplasman: m.deplasman || "?",
-              lig: m.lig || "?",
-              saat: m.saat || "?",
-              ajanlar: normAjan,
-              ortak_karar: m.ortak_karar || "?",
-              guven: parseFloat(m.guven || 0),
-              durum: m.durum || "normal"
-            };
-          });
+          return parsed;
         }
-        return parsed;
+        return null;
       } catch (e) {
-        console.error("JSON parsing hatası:", e);
         return null;
       }
     }
 
-    async function analizBaslat() {
+    async function analizBaslat(mod) {
+      document.getElementById("debug").style.display = "none";
       document.getElementById("ilerlemeBolum").style.display = "block";
-      document.getElementById("ilerlemeMetin").textContent = "Analiz başlatılıyor...";
-      document.getElementById("ilerlemeDetay").textContent = "Lütfen bekleyin";
-      document.getElementById("analizBtn").disabled = true;
+      document.getElementById("ilerlemeDolgu").style.width = "15%";
+      
+      const btnAI = document.getElementById("analizBtnAI");
+      const btnFB = document.getElementById("analizBtnFB");
+      btnAI.disabled = true;
+      btnFB.disabled = true;
 
       const macSayisi = parseInt(document.getElementById("macSayisi").value);
+      const tarihStr = tarihFormatYYYYMMDD();
+
       if (!aiAnahtarlari.gemini) {
-        hataGoster("Gemini API anahtarı bulunamadı. Lütfen Supabase 'ai_ayarlar' tablosunu kontrol edin.");
-        document.getElementById("ilerlemeBolum").style.display = "none";
-        document.getElementById("analizBtn").disabled = false;
+        hataGoster("Gemini API anahtarı Supabase'den çekilemedi.");
+        ilerlemeKapat();
         return;
       }
 
-      const tarihStr = tarihFormatYYYYMMDD();
       let macListesi = [];
 
-      try {
-        document.getElementById("ilerlemeMetin").textContent = "Football-data'dan maçlar çekiliyor...";
-        macListesi = await footballFikstur(macSayisi, tarihStr);
-      } catch (e) {
-        hataGoster("Fikstür çekilemedi: " + e.message);
-        document.getElementById("ilerlemeBolum").style.display = "none";
-        document.getElementById("analizBtn").disabled = false;
-        return;
+      if (mod === "football") {
+        document.getElementById("ilerlemeMetin").textContent = "Fikstür API'den Çekiliyor...";
+        try {
+          macListesi = await footballFikstur(macSayisi, tarihStr);
+          if (!macListesi || macListesi.length === 0) {
+            hataGoster("Seçilen tarihte (" + tarihStr + ") fikstür bulunamadı.");
+            ilerlemeKapat();
+            return;
+          }
+        } catch (e) {
+          hataGoster("Fikstür Hatası: " + e.message);
+          ilerlemeKapat();
+          return;
+        }
       }
 
-      if (!macListesi || macListesi.length === 0) {
-        hataGoster("Seçilen tarihte (" + tarihStr + ") maç bulunamadı. Lütfen başka bir gün seçin.");
-        document.getElementById("ilerlemeBolum").style.display = "none";
-        document.getElementById("analizBtn").disabled = false;
-        return;
-      }
-
-      document.getElementById("ilerlemeMetin").textContent = "AI Web Araması ve 4-Ajan Analizi Yapılıyor...";
-      document.getElementById("ilerlemeDolgu").style.width = "50%";
+      document.getElementById("ilerlemeMetin").textContent = "AI Analizleri Üretiliyor...";
+      document.getElementById("ilerlemeDolgu").style.width = "55%";
 
       try {
-        const prompt = promptOlustur(macListesi);
-        const yanit = await geminiCagir(prompt);
+        const prompt = promptOlustur(macListesi, macSayisi, tarihStr, mod);
+        const webAramaAktif = (mod === "ai");
+        const yanit = await geminiCagir(prompt, webAramaAktif);
         const json = jsonCikar(yanit);
 
         if (json && json.maclar) {
@@ -409,14 +407,19 @@
           await analizKaydet(tarihStr, tumKartlar.length);
           await sonAnalizleriYukle();
         } else {
-          hataGoster("AI yanıtı okunamadı. Tekrar deneyin.");
+          hataGoster("AI yanıt üretti ancak veriler JSON formatına ayrıştırılamadı.");
         }
       } catch (e) {
-        hataGoster("Analiz hatası: " + e.message);
+        hataGoster("Analiz Hatası: " + e.message);
       } finally {
-        document.getElementById("analizBtn").disabled = false;
-        setTimeout(() => { document.getElementById("ilerlemeBolum").style.display = "none"; }, 1000);
+        ilerlemeKapat();
       }
+    }
+
+    function ilerlemeKapat() {
+      document.getElementById("analizBtnAI").disabled = false;
+      document.getElementById("analizBtnFB").disabled = false;
+      setTimeout(() => { document.getElementById("ilerlemeBolum").style.display = "none"; }, 800);
     }
 
     function kartlariGoster() {
@@ -426,7 +429,7 @@
 
       let gosterilecek = tumKartlar.filter(m => {
         if (filtreOne && m.durum !== "one_cikan") return false;
-        if (m.guven < minGuven) return false;
+        if ((m.guven || 0) < minGuven) return false;
         return true;
       });
 
@@ -452,11 +455,11 @@
 
         return '<div class="kart ' + (m.durum || "normal") + '">' +
           '<div class="baslik">' +
-          '<div><div class="mac">' + m.ev_sahibi + ' - ' + m.deplasman + '</div>' +
-          '<div class="lig">' + m.lig + ' | ' + (m.saat || "") + '</div></div>' +
+          '<div><div class="mac">' + (m.ev_sahibi || "?") + ' - ' + (m.deplasman || "?") + '</div>' +
+          '<div class="lig">' + (m.lig || "Lig") + ' | ' + (m.saat || "") + '</div></div>' +
           '<span class="durum-etiket">' + durumEtiket + '</span>' +
           '</div>' + ajanSatirlari +
-          '<div class="ortak"><strong>Ortak Karar:</strong> ' + m.ortak_karar + ' (%' + m.guven + ')</div>' +
+          '<div class="ortak"><strong>Ortak Karar:</strong> ' + (m.ortak_karar || "-") + ' (%' + (m.guven || 0) + ')</div>' +
           '</div>';
       }).join("");
     }
@@ -471,48 +474,56 @@
     }
 
     async function analizKaydet(tarih, sayi) {
+      if (!mevcutKullanici) return;
       const oneCikan = tumKartlar.filter(m => m.durum === "one_cikan").length;
       const normal = tumKartlar.filter(m => m.durum === "normal").length;
       const degersiz = tumKartlar.filter(m => m.durum === "degersiz").length;
       const ozet = oneCikan + " öne çıkan, " + normal + " normal, " + degersiz + " değersiz";
 
-      await client.from("bulten_analizleri").insert({
-        hedef_tarih: tarih,
-        mac_sayisi: sayi,
-        one_cikan_sayisi: oneCikan,
-        normal_sayisi: normal,
-        degersiz_sayisi: degersiz,
-        ai_model: "gemini",
-        ham_yanit: JSON.stringify(tumKartlar),
-        ozet: ozet,
-        created_by: mevcutKullanici
-      });
-      basariGoster("Analiz kaydedildi: " + ozet);
+      try {
+        await client.from("bulten_analizleri").insert({
+          hedef_tarih: tarih,
+          mac_sayisi: sayi,
+          one_cikan_sayisi: oneCikan,
+          normal_sayisi: normal,
+          degersiz_sayisi: degersiz,
+          ai_model: "gemini",
+          ham_yanit: JSON.stringify(tumKartlar),
+          ozet: ozet,
+          created_by: mevcutKullanici
+        });
+        basariGoster("Analiz kaydedildi: " + ozet);
+      } catch (e) {
+        console.warn("Analiz veritabanına kaydedilemedi:", e);
+      }
     }
 
     async function sonAnalizleriYukle() {
-      const { data, error } = await client.from("bulten_analizleri")
-        .select("*")
-        .order("created_at", { ascending: false })
-        .limit(5);
-
-      if (error) return;
       const el = document.getElementById("sonAnalizler");
-      if (!data || data.length === 0) {
-        el.innerHTML = '<div class="bos">Henüz analiz bulunmuyor.</div>';
-        return;
-      }
+      try {
+        const { data, error } = await client.from("bulten_analizleri")
+          .select("*")
+          .order("created_at", { ascending: false })
+          .limit(5);
 
-      el.innerHTML = data.map(a => {
-        const tarih = new Date(a.created_at).toLocaleString('tr-TR', {day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
-        return '<div class="son-analiz">' +
-          '<div class="tarih">' + tarih + ' | Hedef: ' + (a.hedef_tarih || "-") + '</div>' +
-          '<div class="ozet">' + (a.ozet || "-") + '</div>' +
-          '</div>';
-      }).join("");
+        if (error || !data || data.length === 0) {
+          el.innerHTML = '<div class="bos">Henüz yapılmış analiz yok.</div>';
+          return;
+        }
+
+        el.innerHTML = data.map(a => {
+          const tarih = new Date(a.created_at).toLocaleString('tr-TR', {day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
+          return '<div class="son-analiz">' +
+            '<div class="tarih">' + tarih + ' | Hedef: ' + (a.hedef_tarih || "-") + '</div>' +
+            '<div class="ozet">' + (a.ozet || "-") + '</div>' +
+            '</div>';
+        }).join("");
+      } catch (e) {
+        el.innerHTML = '<div class="bos">Henüz yapılmış analiz yok.</div>';
+      }
     }
 
-    // Uygulamayı başlat
+    // Uygulama Başlat
     kontrol();
   </script>
 </body>
