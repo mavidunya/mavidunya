@@ -97,7 +97,8 @@ input,select{width:100%;padding:10px;border-radius:8px;border:none;font-size:1em
 <option value="45">45 maç</option>
 </select>
 
-<button class="buton btn-mor" onclick="analizBaslat()" id="analizBtn">🤖 Analiz Et (4 Ajan)</button>
+<button class="buton btn-mor" onclick="analizBaslat('ai')" id="analizBtnAI">🌍 AI Web Araması ile Analiz</button>
+<button class="buton btn-gri" onclick="analizBaslat('football')" id="analizBtnFB" style="margin-top:8px">📊 football-data ile Analiz (9 lig)</button>
 </div>
 
 <!-- İLERLEME -->
@@ -272,41 +273,49 @@ function promptOlustur(tarih, macSayisi, grupNo, toplamGrup) {
   return p;
 }
 async function footballFikstur(macSayisi, tarih) {
-  hataGoster("Test başladı");
-  
-  const testUrl = "https://api.football-data.org/v4/competitions/PL/matches?dateFrom=2026-09-30&dateTo=2026-10-01";
-  
-  try {
-    const r = await fetch(testUrl, {
-      headers: { "X-Auth-Token": aiAnahtarlari.football }
-    });
-    
-    hataGoster("PL cevap: " + r.status);
-    
-    if (!r.ok) {
-      const hata = await r.text();
-      hataGoster("PL hata: " + r.status + " - " + hata.substring(0, 200));
-      return [];
-    }
-    
-    const data = await r.json();
-    hataGoster("PL maç sayısı: " + (data.matches ? data.matches.length : 0));
-    
-    if (data.matches && data.matches.length > 0) {
-      return data.matches.map(m => ({
-        ev_sahibi: m.homeTeam?.name || "?",
-        deplasman: m.awayTeam?.name || "?",
-        lig: "Premier Lig",
-        saat: m.utcDate ? new Date(m.utcDate).toLocaleTimeString('tr-TR', {hour:'2-digit',minute:'2-digit'}) : "?",
-        tarih: m.utcDate
-      }));
-    }
-    
-    return [];
-  } catch (e) {
-    hataGoster("PL catch: " + e.message);
-    return [];
+  if (!aiAnahtarlari.football) {
+    throw new Error("Football-data anahtarı yok.");
   }
+
+  const ligler = ["PL", "PD", "SA", "BL1", "FL1", "DED", "PPL", "BSA", "ELC"];
+
+  const parcalar = tarih.split(".");
+  const tarihStr = parcalar[2] + "-" + parcalar[1] + "-" + parcalar[0];
+  const tarihObj = new Date(tarihStr);
+  tarihObj.setDate(tarihObj.getDate() + 1);
+  const tarihSonrakiStr = tarihObj.toISOString().split("T")[0];
+
+  const tumMaclar = [];
+  const tumHatalar = [];
+
+  for (const lig of ligler) {
+    try {
+      const url = "https://api.football-data.org/v4/competitions/" + lig + "/matches?dateFrom=" + tarihStr + "&dateTo=" + tarihSonrakiStr;
+      const r = await fetch(url, {
+        headers: { "X-Auth-Token": aiAnahtarlari.football }
+      });
+      if (!r.ok) { tumHatalar.push(lig + ":" + r.status); continue; }
+      const data = await r.json();
+      if (data.matches && Array.isArray(data.matches)) {
+        for (const m of data.matches) {
+          tumMaclar.push({
+            ev_sahibi: m.homeTeam?.name || "?",
+            deplasman: m.awayTeam?.name || "?",
+            lig: data.competition?.name || lig,
+            saat: m.utcDate ? new Date(m.utcDate).toLocaleTimeString('tr-TR', {hour:'2-digit',minute:'2-digit'}) : "?",
+            tarih: m.utcDate
+          });
+        }
+      }
+      await new Promise(res => setTimeout(res, 6500));
+    } catch (e) {
+      console.warn("Lig " + lig + " hata:", e.message);
+    }
+  }
+
+  tumMaclar.sort((a, b) => new Date(a.tarih) - new Date(b.tarih));
+  return tumMaclar.slice(0, macSayisi);
+}
 }
 
   
