@@ -271,6 +271,12 @@ async function gecmisYukle() {
 
   if (error) { hataGoster("Geçmiş: " + error.message); return; }
 
+  const { data: profiller } = await client.from("profiles").select("auth_id, display_name, avatar_color");
+  const profilMap = {};
+  if (profiller) {
+    profiller.forEach(p => { profilMap[p.auth_id] = p; });
+  }
+
   const liste = document.getElementById("gecmisListe");
   if (!data || data.length === 0) {
     liste.innerHTML = '<div class="bos">Henüz işlem yok.</div>';
@@ -283,10 +289,23 @@ async function gecmisYukle() {
     let durumText = "⏳ BEKLİYOR";
     if (k.bahis_durumu === "kazandi") { durumClass = "durum-kazandi"; durumText = "✅ KAZANDI"; }
     else if (k.bahis_durumu === "kaybetti") { durumClass = "durum-kaybetti"; durumText = "❌ KAYBETTİ"; }
+    else if (k.bahis_durumu === "transfer") { durumClass = "durum-transfer"; durumText = "💸 TRANSFER"; }
+
+    let kimHtml = "";
+    if (k.created_by && profilMap[k.created_by]) {
+      const p = profilMap[k.created_by];
+      const renk = p.avatar_color === "blue" ? "#3b82f6" : (p.avatar_color === "green" ? "#22c55e" : "#888");
+      kimHtml = '<div style="display:flex;align-items:center;gap:6px;margin-top:4px;font-size:0.85em">' +
+        '<span style="display:inline-block;width:12px;height:12px;border-radius:50%;background:' + renk + ';border:2px solid #fff"></span>' +
+        '<span>' + p.display_name + '</span>' +
+        '</div>';
+    }
+
     return '<div class="islem">' +
       '<div class="satir1"><span class="mac">' + (k.mac || "-") + '</span><span>' + tarih + '</span></div>' +
       '<div>' + (k.market || "-") + ' | Oran: ' + (k.oran || "-") + ' | ' + tlFormat(Math.abs(k.amount || 0)) + '</div>' +
       '<div class="satir1"><span>Seri ' + (k.seri_no || "-") + ', Adım ' + (k.adim_no || "-") + '</span><span class="durum ' + durumClass + '">' + durumText + '</span></div>' +
+      kimHtml +
       '</div>';
   }).join("");
 }
