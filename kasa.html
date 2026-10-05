@@ -392,25 +392,23 @@ const kaynak = document.getElementById("yeniKaynak").value;
   let seriNo = 1;
   let adimNo = 1;
 
-  const { data: sonBahis } = await client.from("bankroll")
-    .select("seri_no, adim_no")
-    .eq("bahis_durumu", "bekliyor")
-    .order("created_at", { ascending: false })
-    .limit(1);
+  const { data: aktifSeri } = await client.from("bankroll")
+  .select("seri_no, adim_no")
+  .eq("seri_durumu", "devam_ediyor")
+  .order("adim_no", { ascending: false })
+  .limit(1);
 
-  if (sonBahis && sonBahis.length > 0) {
-    seriNo = sonBahis[0].seri_no || 1;
-    adimNo = (sonBahis[0].adim_no || 0) + 1;
-  } else {
-    const { data: sonSeri } = await client.from("bankroll")
-      .select("seri_no")
-      .order("seri_no", { ascending: false })
-      .limit(1);
-    if (sonSeri && sonSeri.length > 0) {
-      seriNo = (sonSeri[0].seri_no || 0) + 1;
-    }
-    adimNo = 1;
-  }
+if (aktifSeri && aktifSeri.length > 0) {
+  seriNo = aktifSeri[0].seri_no;
+  adimNo = (aktifSeri[0].adim_no || 0) + 1;
+} else {
+  const { data: sonSeri } = await client.from("bankroll")
+    .select("seri_no")
+    .order("seri_no", { ascending: false })
+    .limit(1);
+  seriNo = (sonSeri && sonSeri.length > 0) ? (sonSeri[0].seri_no || 0) + 1 : 1;
+  adimNo = 1;
+}
 
   const yeniKaynak = eskiKaynak - tutar;
   const guncelleme = {};
@@ -491,6 +489,9 @@ async function bahisSonuc(sonuc) {
       const yeniAktif = anaKasa * (oranKayip / 100);
       aktifRolling = yeniAktif;
       anaKasa = anaKasa - yeniAktif;
+      await client.from("bankroll").update({
+  seri_durumu: "kirildi"
+}).eq("seri_no", aktifBahis.seri_no).eq("seri_durumu", "devam_ediyor");
     }
   }
 
