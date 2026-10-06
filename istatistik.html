@@ -183,6 +183,7 @@ async function kontrol() {
 async function veriYukle() {
   const { data, error } = await client.from("bankroll")
     .select("*")
+   .eq("kasa_id", kasaId)
     .in("bahis_durumu", ["kazandi", "kaybetti"])
     .order("created_at", { ascending: false });
 
