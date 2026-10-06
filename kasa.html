@@ -125,7 +125,7 @@ input,select{width:100%;padding:10px;border-radius:8px;border:none;font-size:1em
 </select>
 
 <label>Alt Market</label>
-<select id="yeniAltMarket">
+<select id="yeniAltMarket" onchange="yonGuncelle()">
 <option value="">Önce kategori seçin...</option>
 </select>
 
@@ -357,7 +357,7 @@ async function transferYap() {
   const MARKET_LISTESI = {
   "mac_sonucu": ["Maç Sonucu (1X2)", "Çifte Şans", "Çifte Şans ve Toplam Alt/Üst", "Handikap", "Herhangi Bir Yarıyı Kazanır", "Geriye Düşüp Berabere Biter", "Geriden Gelip Kazanır"],
   "gol": ["Toplam Gol Üst/Alt", "KG Var/Yok", "Toplam Gol Aralığı", "Ev Gol Aralığı", "Dep Gol Aralığı", "Ev Gol Yer", "Dep Gol Yer", "Gol Yemeden Kazanır"],
-  "ilk_ikinci_yari": ["İlk Yarı Sonucu", "İkinci Yarı Sonucu", "İlk Yarı Gol", "İkinci Yarı Gol", "Her İki Yarıda Gol", "Her İki Yarıda 1.5 Üst"],
+  "ilk_ikinci_yari": ["İlk Yarı Sonucu", "İkinci Yarı Sonucu", "Ev İlk Yarı 0.5", "Ev İlk Yarı 1.5", "Ev İlk Yarı 2.5", "Dep İlk Yarı 0.5", "Dep İlk Yarı 1.5", "Dep İlk Yarı 2.5", "Ev İkinci Yarı 0.5", "Ev İkinci Yarı 1.5", "Ev İkinci Yarı 2.5", "Dep İkinci Yarı 0.5", "Dep İkinci Yarı 1.5", "Dep İkinci Yarı 2.5", "Her İki Yarıda Gol", "Her İki Yarıda 1.5 Üst"],
   "takim_bazli": ["Ev Her İki Yarıda Gol Atar", "Dep Her İki Yarıda Gol Atar", "Ev İlk Yarı Gol", "Dep İlk Yarı Gol", "Ev İkinci Yarı Gol", "Dep İkinci Yarı Gol", "Ev Galibiyet + Üst", "Dep Galibiyet + Üst"],
   "korner": ["Toplam Korner", "İlk Yarı Korner", "Takım Korner", "Korner Handikap"],
   "kart": ["Toplam Kart", "Takım Kart", "Kırmızı Kart", "İlk Yarı Kart"],
@@ -385,6 +385,21 @@ function altMarketGuncelle() {
     opt.textContent = m;
     altMarketSelect.appendChild(opt);
   });
+}
+  function yonGuncelle() {
+  const secilenAlt = document.getElementById("yeniAltMarket").value;
+  const yonSelect = document.getElementById("yeniYon");
+  yonSelect.innerHTML = "";
+
+  if (secilenAlt === "KG Var/Yok" || secilenAlt === "Kırmızı Kart" || secilenAlt === "Penaltı Olur mu" || secilenAlt === "VAR Kararı" || secilenAlt === "Ofsayt Gol" || secilenAlt === "Kendi Kalesine Gol") {
+    yonSelect.innerHTML = '<option value="var">Var</option><option value="yok_deger">Yok</option>';
+  }
+  else if (secilenAlt === "Maç Sonucu (1X2)" || secilenAlt === "Çifte Şans" || secilenAlt === "İlk Yarı Sonucu" || secilenAlt === "İkinci Yarı Sonucu") {
+    yonSelect.innerHTML = '<option value="yok">Yok (sabit bahis)</option>';
+  }
+  else {
+    yonSelect.innerHTML = '<option value="üst">Üst</option><option value="alt">Alt</option><option value="yok">Yok (sabit bahis)</option>';
+  }
 }
 async function bahisEkle() {
   const evSahibi = document.getElementById("yeniEvSahibi").value.trim();
