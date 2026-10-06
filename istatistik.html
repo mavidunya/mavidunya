@@ -118,7 +118,19 @@ input,select{width:100%;padding:10px;border-radius:8px;border:none;font-size:1em
 <h2>🎯 Alt Market Bazlı</h2>
 <div id="altMarketBazli"><div class="bos">Yükleniyor...</div></div>
 </div>
+<!-- KİŞİ × KATEGORİ -->
+<div class="bolum">
+<h2>👥 Kişi × Kategori</h2>
+<div id="kisiKategoriBazli"><div class="bos">Yükleniyor...</div></div>
+</div>
 
+<!-- KATEGORİ AĞIRLIĞI -->
+<div class="bolum">
+<h2>📊 Kategori Ağırlığı</h2>
+<div id="kategoriAgirlik"><div class="bos">Yükleniyor...</div></div>
+</div>
+
+ 
 <!-- SERİ BAZLI -->
 <div class="bolum">
 <h2>🔗 Seri Bazlı</h2>
@@ -253,12 +265,14 @@ function hesapla() {
   kisiBazliHesapla(veri);
   kategoriBazliHesapla(veri);
   altMarketBazliHesapla(veri);
+ kisiKategoriHesapla(veri);
+kategoriAgirlikHesapla(veri);
   seriBazliHesapla();
 }
 
 function kisiBazliHesapla(veri) {
-  const hasanId = "f1cda61e-e565-42c8-9fd9-63870b6dd3fc";
-  const hakanId = "37a5f741-d54d-46c4-b046-3198dbd05bb9";
+  const hasanId = "05373fe9-34f8-4b0a-a3e9-f6a3d396b690";
+  const hakanId = "f256694a-6664-4e77-9712-3150a7e86261";
 
   const kisiler = [
     { isim: "🔵 Hasan", id: hasanId },
@@ -341,6 +355,81 @@ function altMarketBazliHesapla(veri) {
   }).join("");
 
   document.getElementById("altMarketBazli").innerHTML = html || '<div class="bos">Veri yok.</div>';
+}
+function kisiKategoriHesapla(veri) {
+  const hasanId = "05373fe9-34f8-4b0a-a3e9-f6a3d396b690";
+  const hakanId = "f256694a-6664-4e77-9712-3150a7e86261";
+  const kisiler = [
+    { isim: "🔵 Hasan", id: hasanId },
+    { isim: "🟢 Hakan", id: hakanId }
+  ];
+  const isimler = {
+    "mac_sonucu":"Maç Sonucu","gol":"Gol","ilk_ikinci_yari":"İlk/İkinci Yarı",
+    "takim_bazli":"Takım Bazlı","korner":"Korner","kart":"Kart",
+    "zaman_bazli":"Zaman Bazlı","ozel_oyuncu":"Özel/Oyuncu",
+    "toplam_istatistik":"Toplam İstatistik","turnuva":"Turnuva",
+    "diger":"Diğer","belirsiz":"Belirsiz"
+  };
+  let html = "";
+  kisiler.forEach(function(kisi) {
+    const kisiVeri = veri.filter(function(k){ return k.created_by === kisi.id; });
+    if (kisiVeri.length === 0) return;
+    const kats = {};
+    kisiVeri.forEach(function(k) {
+      const kat = k.market_kategori || "belirsiz";
+      if (!kats[kat]) kats[kat] = { toplam: 0, kazanan: 0 };
+      kats[kat].toplam++;
+      if (k.bahis_durumu === "kazandi") kats[kat].kazanan++;
+    });
+    html += '<div style="background:rgba(255,255,255,0.05);padding:12px;border-radius:10px;margin-bottom:12px">';
+    html += '<div style="font-weight:bold;font-size:1.05em;margin-bottom:8px">' + kisi.isim + ' (' + kisiVeri.length + ' bahis)</div>';
+    Object.keys(kats).forEach(function(kat) {
+      const d = kats[kat];
+      const isabet = d.toplam > 0 ? ((d.kazanan / d.toplam) * 100).toFixed(1) : 0;
+      const renk = isabet >= 70 ? "#4ade80" : (isabet >= 50 ? "#fbbf24" : "#ef4444");
+      html += '<div class="satir" style="margin-bottom:4px">' +
+        '<span>' + (isimler[kat] || kat) + '</span>' +
+        '<span style="color:' + renk + '">' + d.kazanan + '/' + d.toplam + ' — %' + isabet + '</span>' +
+        '</div>';
+    });
+    html += '</div>';
+  });
+  document.getElementById("kisiKategoriBazli").innerHTML = html || '<div class="bos">Veri yok.</div>';
+}
+
+function kategoriAgirlikHesapla(veri) {
+  const toplam = veri.length;
+  if (toplam === 0) {
+    document.getElementById("kategoriAgirlik").innerHTML = '<div class="bos">Veri yok.</div>';
+    return;
+  }
+  const isimler = {
+    "mac_sonucu":"Maç Sonucu","gol":"Gol","ilk_ikinci_yari":"İlk/İkinci Yarı",
+    "takim_bazli":"Takım Bazlı","korner":"Korner","kart":"Kart",
+    "zaman_bazli":"Zaman Bazlı","ozel_oyuncu":"Özel/Oyuncu",
+    "toplam_istatistik":"Toplam İstatistik","turnuva":"Turnuva",
+    "diger":"Diğer","belirsiz":"Belirsiz"
+  };
+  const kats = {};
+  veri.forEach(function(k) {
+    const kat = k.market_kategori || "belirsiz";
+    if (!kats[kat]) kats[kat] = { toplam: 0, kazanan: 0 };
+    kats[kat].toplam++;
+    if (k.bahis_durumu === "kazandi") kats[kat].kazanan++;
+  });
+  const sirali = Object.keys(kats).sort(function(a,b){ return kats[b].toplam - kats[a].toplam; });
+  let html = "";
+  sirali.forEach(function(kat) {
+    const d = kats[kat];
+    const yuzde = ((d.toplam / toplam) * 100).toFixed(1);
+    const isabet = d.toplam > 0 ? ((d.kazanan / d.toplam) * 100).toFixed(1) : 0;
+    const renk = isabet >= 70 ? "#4ade80" : (isabet >= 50 ? "#fbbf24" : "#ef4444");
+    html += '<div class="satir">' +
+      '<span>' + (isimler[kat] || kat) + ' <span style="opacity:0.7">(%' + yuzde + ')</span></span>' +
+      '<span style="color:' + renk + '">' + d.kazanan + '/' + d.toplam + ' — %' + isabet + '</span>' +
+      '</div>';
+  });
+  document.getElementById("kategoriAgirlik").innerHTML = html;
 }
 
 function seriBazliHesapla() {
