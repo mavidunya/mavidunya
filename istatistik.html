@@ -149,6 +149,14 @@ input,select{width:100%;padding:10px;border-radius:8px;border:none;font-size:1em
 const SUPABASE_URL = "https://bwdoiltmkrqfxqknedih.supabase.co";
 const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ3ZG9pbHRta3JxZnhxa25lZGloIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA0NTkzNjcsImV4cCI6MjEwNjAzNTM2N30.mx1O66LItD6Q6ED1Z75YzGXW7ijSDUVAl9R2df4Km8o";
 const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+ let kasaId = null;
+
+async function kasaIdYukle() {
+  const { data: { session } } = await client.auth.getSession();
+  if (!session) return;
+  const { data: profil } = await client.from("profiles").select("kasa_id").eq("auth_id", session.user.id).single();
+  if (profil) kasaId = profil.kasa_id;
+}
 
 let tumVeri = [];
 let mevcutFiltreler = { tarih: "tumu", kategori: "tumu", altMarket: "tumu", kisi: "tumu", sonuc: "tumu" };
@@ -165,6 +173,7 @@ function hataGoster(m) {
 }
 
 async function kontrol() {
+ await kasaIdYukle();
   const { data: { session } } = await client.auth.getSession();
   if (!session) { window.location.href = "login.html"; return; }
   await veriYukle();
