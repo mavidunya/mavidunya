@@ -103,7 +103,8 @@ document.getElementById("hosgeldin").textContent = "Hos geldin, " + profil.displ
       document.getElementById("hosgeldin").textContent = "Hos geldin, " + email;
     }
 
-    const { data: ayar, error: aErr } = await client.from("ayarlar").select("*").eq("id", 1).single();
+    const { data: profil } = await client.from("profiles").select("kasa_id").eq("auth_id", session.user.id).single();
+const { data: ayar, error: aErr } = await client.from("ayarlar").select("*").eq("kasa_id", profil.kasa_id).single();
     if (aErr) { hataGoster("Ayarlar: " + aErr.message); return; }
     if (ayar) {
       const hedef = parseFloat(ayar.hedef) || 0;
