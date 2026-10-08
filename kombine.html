@@ -70,9 +70,107 @@ input,select,textarea{width:100%;padding:10px;border-radius:8px;border:none;font
 .sayfalama span{font-size:0.9em;text-align:center;flex:1}
 .bos{opacity:0.6;text-align:center;padding:15px;font-size:0.9em}
 .kim-nokta{width:14px;height:14px;border-radius:50%;border:2px solid #fff;display:inline-block;vertical-align:middle}
+  /* KOMBİNE ÖZET KUTUSU */
+.kombine-ozet{
+  background:rgba(255,255,255,0.06);
+  border:1px solid rgba(255,255,255,0.12);
+  border-radius:14px;
+  padding:15px;
+  margin-bottom:15px;
+}
+.ozet-baslik{
+  font-size:0.95em;
+  font-weight:bold;
+  opacity:0.85;
+  margin-bottom:12px;
+  text-align:center;
+}
+.ozet-grid{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:8px;
+  margin-bottom:12px;
+}
+.ozet-item{
+  background:rgba(255,255,255,0.05);
+  border-radius:10px;
+  padding:8px 5px;
+  text-align:center;
+}
+.ozet-label{
+  font-size:0.7em;
+  opacity:0.7;
+  margin-bottom:3px;
+}
+.ozet-deger{
+  font-size:1.05em;
+  font-weight:bold;
+}
+.ozet-deger.yesil{color:#22c55e}
+.ozet-deger.kirmizi{color:#ef4444}
+.ozet-deger.sari{color:#f59e0b}
+.ozet-satir{
+  display:flex;
+  justify-content:space-between;
+  padding:4px 0;
+  font-size:0.88em;
+  border-bottom:1px solid rgba(255,255,255,0.06);
+}
+.ozet-satir:last-child{border-bottom:none}
+.ozet-satir span{opacity:0.75}
+.ozet-net{
+  margin-top:5px;
+  padding-top:8px;
+  border-top:1px solid rgba(255,255,255,0.15);
+  font-size:1em;
+}
+.ozet-net .pozitif{color:#22c55e}
+.ozet-net .negatif{color:#ef4444}
 </style>
 </head>
 <body>
+  <!-- KOMBİNE ÖZET KUTUSU -->
+<div class="kombine-ozet" id="kombineOzet">
+  <div class="ozet-baslik">🎯 KOMBİNE GENEL DURUM</div>
+  <div class="ozet-grid">
+    <div class="ozet-item">
+      <div class="ozet-label">Toplam</div>
+      <div class="ozet-deger" id="ozetToplam">0</div>
+    </div>
+    <div class="ozet-item">
+      <div class="ozet-label">✅ Kazanan</div>
+      <div class="ozet-deger yesil" id="ozetKazanan">0</div>
+    </div>
+    <div class="ozet-item">
+      <div class="ozet-label">❌ Kaybeden</div>
+      <div class="ozet-deger kirmizi" id="ozetKaybeden">0</div>
+    </div>
+    <div class="ozet-item">
+      <div class="ozet-label">⏳ Bekleyen</div>
+      <div class="ozet-deger sari" id="ozetBekleyen">0</div>
+    </div>
+  </div>
+  <div class="ozet-satir">
+    <span>Başarı:</span>
+    <strong id="ozetBasari">%0</strong>
+  </div>
+  <div class="ozet-satir">
+    <span>Yatırılan:</span>
+    <strong id="ozetYatirilan">0 TL</strong>
+  </div>
+  <div class="ozet-satir">
+    <span>Kazanç:</span>
+    <strong id="ozetKazanc">0 TL</strong>
+  </div>
+  <div class="ozet-satir ozet-net">
+    <span>Net Kâr/Zarar:</span>
+    <strong id="ozetNet">0 TL</strong>
+  </div>
+  <div class="ozet-satir">
+    <span>ROI:</span>
+    <strong id="ozetRoi">%0</strong>
+  </div>
+</div>
 <div class="kapsayici">
 
 <button class="geri" onclick="window.location.href='index.html'">← Ana Sayfa</button>
@@ -257,6 +355,59 @@ function macAltMarketGuncelle() {
     opt.textContent = m;
     altMarketSelect.appendChild(opt);
   });
+}
+  async function kombineOzetYukle() {
+  const { data, error } = await client.from("coupons")
+    .select("result, stake, potential_return")
+    .eq("kasa_id", kasaId)
+    .eq("coupon_type", "kombine");
+
+  if (error) { console.log("Özet hata:", error.message); return; }
+  if (!data) return;
+
+  let toplam = data.length;
+  let kazanan = 0, kaybeden = 0, bekleyen = 0;
+  let yatirilan = 0, kazanc = 0;
+
+  data.forEach(function(k) {
+    const sonuc = k.result || "bekliyor";
+    yatirilan += parseFloat(k.stake || 0);
+
+    if (sonuc === "kazandi") {
+      kazanan++;
+      kazanc += parseFloat(k.potential_return || 0);
+    } else if (sonuc === "kaybetti") {
+      kaybeden++;
+    } else if (sonuc === "bozduruldu") {
+      // Bozduruldu → kazanan sayılır (net kâra dahil edilecek)
+      kazanan++;
+      // potential_return değil, gerçek dönüş tutarı kullanılmalı (varsa)
+      kazanc += parseFloat(k.potential_return || 0);
+    } else {
+      bekleyen++;
+    }
+  });
+
+  const sonuclanan = kazanan + kaybeden;
+  const basari = sonuclanan > 0 ? (kazanan / sonuclanan * 100) : 0;
+  const net = kazanc - yatirilan;
+  const roi = yatirilan > 0 ? (net / yatirilan * 100) : 0;
+
+  document.getElementById("ozetToplam").textContent = toplam;
+  document.getElementById("ozetKazanan").textContent = kazanan;
+  document.getElementById("ozetKaybeden").textContent = kaybeden;
+  document.getElementById("ozetBekleyen").textContent = bekleyen;
+  document.getElementById("ozetBasari").textContent = "%" + basari.toFixed(1);
+  document.getElementById("ozetYatirilan").textContent = tlFormat(yatirilan);
+  document.getElementById("ozetKazanc").textContent = tlFormat(kazanc);
+
+  const netEl = document.getElementById("ozetNet");
+  netEl.textContent = (net >= 0 ? "+" : "") + tlFormat(net);
+  netEl.className = net >= 0 ? "pozitif" : "negatif";
+
+  const roiEl = document.getElementById("ozetRoi");
+  roiEl.textContent = (roi >= 0 ? "+" : "") + "%" + roi.toFixed(1);
+  roiEl.className = roi >= 0 ? "pozitif" : "negatif";
 }
 
 function macYonGuncelle() {
@@ -454,6 +605,7 @@ function ozetGuncelle() {
   macListesiGuncelle();
   await kombineFonuYukle();
   await kuponGecmisYukle();
+  await kombineOzetYukle();
 }
 
 async function kuponGecmisYukle() {
@@ -601,6 +753,7 @@ async function anaKasayaAktar() {
 
 // Tutar değişince özet güncelle
 document.getElementById("kuponTutar").addEventListener("input", ozetGuncelle);
+  kombineOzetYukle();
 
 kontrol();
   </script>
