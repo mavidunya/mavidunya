@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mavidunya - Kombine Stüdyosu</title>
+<style>
+body{font-family:Arial,sans-serif;background:linear-gradient(135deg,#1e3c72,#2a5298);color:#fff;margin:0;padding:15px;min-height:100vh}
+.kapsayici{max-width:650px;margin:0 auto}
+h1{font-size:1.6em;text-align:center;margin:10px 0}
+.geri{background:rgba(255,255,255,0.15);color:#fff;border:none;padding:8px 15px;border-radius:8px;font-size:0.9em;cursor:pointer;margin-bottom:10px}
+.bolum{background:rgba(255,255,255,0.08);padding:15px;border-radius:15px;margin-bottom:15px}
+.bolum h2{font-size:1.1em;margin:0 0 12px 0;opacity:0.95}
+.fon-kutu{background:rgba(74,222,128,0.15);border:2px solid #4ade80;padding:15px;border-radius:12px;text-align:center;margin-bottom:15px}
+.fon-kutu .etiket{font-size:0.85em;opacity:0.9}
+.fon-kutu .tutar{font-size:2em;font-weight:bold;color:#4ade80;display:block;margin-top:5px}
+.fon-btn-grup{display:flex;gap:8px;margin-top:10px}
+.fon-btn-grup button{flex:1;padding:10px;border-radius:8px;border:none;font-weight:bold;font-size:0.85em;cursor:pointer}
+.btn-yesil{background:#4ade80;color:#064e3b}
+.btn-yesil:hover{background:#22c55e}
+.btn-mavi{background:#3b82f6;color:#fff}
+.btn-mavi:hover{background:#2563eb}
+.btn-mor{background:#8b5cf6;color:#fff}
+.btn-mor:hover{background:#7c3aed}
+.btn-kirmizi{background:#ef4444;color:#fff}
+.btn-kirmizi:hover{background:#dc2626}
+.btn-gri{background:#64748b;color:#fff}
+.btn-gri:hover{background:#475569}
+label{display:block;font-size:0.85em;opacity:0.85;margin:8px 0 4px 0}
+input,select,textarea{width:100%;padding:10px;border-radius:8px;border:none;font-size:1em;box-sizing:border-box;background:rgba(255,255,255,0.95);color:#000}
+.buton{width:100%;padding:12px;border-radius:10px;border:none;font-weight:bold;font-size:1em;cursor:pointer;margin-top:10px}
+.mac-kart{background:rgba(255,255,255,0.06);padding:12px;border-radius:10px;margin-bottom:8px;font-size:0.88em}
+.mac-kart .mac{font-weight:bold;font-size:1.05em;margin-bottom:6px}
+.mac-kart .market{opacity:0.85}
+.mac-kart .oran{color:#4ade80;font-weight:bold}
+.mac-kart .guven{color:#fbbf24;font-weight:bold}
+.kupon-ozet{background:rgba(139,92,246,0.15);border:2px solid #8b5cf6;padding:15px;border-radius:12px;margin-top:15px}
+.kupon-ozet .satir{display:flex;justify-content:space-between;padding:6px 0;font-size:0.95em}
+.kupon-ozet .buyuk{font-size:1.3em;font-weight:bold;color:#8b5cf6}
+.lotarya-uyari{background:#ef4444;color:#fff;padding:12px;border-radius:10px;margin-top:10px;font-weight:bold;text-align:center;display:none}
+.lotarya-uyari.aktif{display:block}
+.hata{background:#fbbf24;color:#000;padding:10px;border-radius:10px;margin-top:10px;font-size:0.85em;display:none;word-break:break-word}
+.basari{background:#4ade80;color:#064e3b;padding:10px;border-radius:10px;margin-top:10px;font-size:0.85em;display:none;text-align:center;font-weight:bold}
+.gecmis-kupon{background:rgba(255,255,255,0.06);padding:12px;border-radius:10px;margin-bottom:10px;font-size:0.88em;border-left:6px solid #64748b;cursor:pointer}
+.gecmis-kupon.kazandi{border-left-color:#4ade80}
+.gecmis-kupon.kaybetti{border-left-color:#ef4444}
+.gecmis-kupon.bozduruldu{border-left-color:#fbbf24}
+.gecmis-kupon.bekliyor{border-left-color:#8b5cf6}
+.gecmis-kupon .baslik{display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px;margin-bottom:6px}
+.gecmis-kupon .kupon-adi{font-weight:bold;font-size:1.05em}
+.gecmis-kupon .tarih{font-size:0.8em;opacity:0.75}
+.gecmis-kupon .sonuc-etiket{font-size:0.75em;padding:3px 10px;border-radius:10px;font-weight:bold}
+.gecmis-kupon.kazandi .sonuc-etiket{background:#4ade80;color:#064e3b}
+.gecmis-kupon.kaybetti .sonuc-etiket{background:#ef4444;color:#fff}
+.gecmis-kupon.bozduruldu .sonuc-etiket{background:#fbbf24;color:#000}
+.gecmis-kupon.bekliyor .sonuc-etiket{background:#8b5cf6;color:#fff}
+.gecmis-kupon .kim{font-size:0.8em;display:flex;align-items:center;gap:6px;margin-top:4px}
+.gecmis-kupon .kim .nokta{width:12px;height:12px;border-radius:50%;border:2px solid #fff}
+.gecmis-kupon .maç-liste{display:none;margin-top:10px;padding-top:10px;border-top:1px solid rgba(255,255,255,0.1)}
+.gecmis-kupon.acik .maç-liste{display:block}
+.gecmis-kupon .maç-satir{padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.06);font-size:0.85em}
+.gecmis-kupon .maç-satir .sonuc-mini{font-size:0.8em;padding:2px 8px;border-radius:8px;margin-left:6px}
+.gecmis-kupon .maç-satir .s-kazandi{background:#4ade80;color:#064e3b}
+.gecmis-kupon .maç-satir .s-kaybetti{background:#ef4444;color:#fff}
+.gecmis-kupon .maç-satir .s-bekliyor{background:#8b5cf6;color:#fff}
+.gecmis-kupon .maç-satir .s-bozduruldu{background:#fbbf24;color:#000}
+.sayfalama{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:15px}
+.sayfalama button{flex:1;padding:10px;border-radius:8px;border:none;font-weight:bold;font-size:0.9em;cursor:pointer;background:#475569;color:#fff}
+.sayfalama button:disabled{opacity:0.4}
+.sayfalama span{font-size:0.9em;text-align:center;flex:1}
+.bos{opacity:0.6;text-align:center;padding:15px;font-size:0.9em}
+.kim-nokta{width:14px;height:14px;border-radius:50%;border:2px solid #fff;display:inline-block;vertical-align:middle}
+</style>
+</head>
+<body>
+<div class="kapsayici">
+
+<button class="geri" onclick="window.location.href='index.html'">← Ana Sayfa</button>
+<h1>🎯 Kombine Stüdyosu</h1>
+<div id="debug" class="hata"></div>
+<div id="basari" class="basari"></div>
+
+<!-- KOMBİNE FONU -->
+<div class="bolum">
+<h2>💰 Kombine Fonu</h2>
+<div class="fon-kutu">
+<span class="etiket">Kullanılabilir Bakiye</span>
+<span class="tutar" id="kombineFon">0 TL</span>
+</div>
+<div class="fon-btn-grup">
+<button class="btn-yesil" onclick="fonBesle()">💰 Fonu Besle</button>
+<button class="btn-mavi" onclick="anaKasayaAktar()">➡️ Ana Kasaya Aktar</button>
+</div>
+</div>
+
+<!-- YENİ KOMBİNE -->
+<div class="bolum">
+<h2>➕ Yeni Kombine</h2>
+<label>Kupon Adı</label>
+<input type="text" id="kuponAdi" placeholder="Örn: Cumartesi, Fantazi Kuponu...">
+
+<label>Maç Tarihi</label>
+<input type="date" id="kuponMacTarihi">
+
+<label>Bahis Tutarı (TL)</label>
+<input type="number" id="kuponTutar" placeholder="Örn: 100">
+
+<h3 style="font-size:1em;margin-top:15px">Maçlar</h3>
+<div id="macListesi"><div class="bos">Henüz maç eklenmedi. Aşağıdan ekleyin.</div></div>
+
+<h3 style="font-size:1em;margin-top:15px">Maç Ekle</h3>
+<label>Ev Sahibi Takım</label>
+<input type="text" id="macEv" placeholder="Örn: Barcelona">
+
+<label>Deplasman Takımı</label>
+<input type="text" id="macDep" placeholder="Örn: Real Madrid">
+
+<label>Kategori</label>
+<select id="macKategori" onchange="macAltMarketGuncelle()">
+<option value="">Seçiniz...</option>
+<option value="mac_sonucu">⚽ Maç Sonucu</option>
+<option value="gol">🥅 Gol</option>
+<option value="ilk_ikinci_yari">⏱️ İlk/İkinci Yarı</option>
+<option value="takim_bazli">🏆 Takım Bazlı</option>
+<option value="korner">🚩 Korner</option>
+<option value="kart">🟨 Kart</option>
+<option value="zaman_bazli">⏰ Zaman Bazlı Gol</option>
+<option value="ozel_oyuncu">🎯 Özel / Oyuncu</option>
+<option value="toplam_istatistik">📊 Toplam İstatistik</option>
+<option value="turnuva">🏆 Turnuva/Kupa</option>
+<option value="diger">📌 Diğer</option>
+</select>
+
+<label>Alt Market</label>
+<select id="macAltMarket" onchange="macYonGuncelle()">
+<option value="">Önce kategori seçin...</option>
+</select>
+
+<label>Değer</label>
+<input type="text" id="macDeger" placeholder="Örn: 2.5">
+
+<label>Yön</label>
+<select id="macYon">
+<option value="yok">Yok (sabit bahis)</option>
+</select>
+
+<label>Oran</label>
+<input type="number" id="macOran" step="0.01" placeholder="Örn: 1.50">
+
+<label>Güven % (opsiyonel)</label>
+<input type="number" id="macGuven" placeholder="Örn: 75">
+
+<button class="buton btn-mavi" onclick="macEkle()">➕ Maç Ekle</button>
+
+<!-- KUPON ÖZETİ -->
+<div class="kupon-ozet" id="kuponOzet" style="display:none">
+<div class="satir"><span>Toplam Oran</span><span class="buyuk" id="ozetToplamOran">0</span></div>
+<div class="satir"><span>Tutma Olasılığı</span><span class="buyuk" id="ozetTutmaOlasilik">0%</span></div>
+<div class="satir"><span>Bahis Tutarı</span><span id="ozetTutar">0 TL</span></div>
+<div class="satir"><span>Potansiyel Kazanç</span><span id="ozetKazanc">0 TL</span></div>
+</div>
+<div id="lotaryaUyari" class="lotarya-uyari">⚠️ LOTO BİLETİ! Tutma olasılığı %5'in altında. Kaybetmeyi göze alın.</div>
+
+<button class="buton btn-yesil" onclick="kuponKaydet()" id="kaydetBtn" style="display:none">💾 Kuponu Kaydet</button>
+</div>
+
+<!-- KOMBİNE GEÇMİŞİ -->
+<div class="bolum">
+<h2>📜 Kombine Geçmişi</h2>
+<div id="kuponGecmis"><div class="bos">Yükleniyor...</div></div>
+<div class="sayfalama" id="sayfalama" style="display:none">
+<button id="oncekiBtn" onclick="oncekiSayfa()">← Önceki</button>
+<span id="sayfaBilgi">Sayfa 1</span>
+<button id="sonrakiBtn" onclick="sonrakiSayfa()">Sonraki →</button>
+</div>
+</div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+const SUPABASE_URL = "https://bwdoiltmkrqfxqknedih.supabase.co";
+const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ3ZG9pbHRta3JxZnhxa25lZGloIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA0NTkzNjcsImV4cCI6MjEwNjAzNTM2N30.mx1O66LItD6Q6ED1Z75YzGXW7ijSDUVAl9R2df4Km8o";
+const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+let mevcutKullanici = null;
+let kasaId = null;
+let kombineFon = 0;
+let kuponMaclari = [];
+let sayfa = 1;
+const SAYFA_BOYUT = 20;
+let toplamKupon = 0;
+
+const MARKET_LISTESI = {
+  "mac_sonucu": ["Maç Sonucu (1X2)", "Çifte Şans", "Handikap", "Herhangi Bir Yarıyı Kazanır", "Geriye Düşüp Berabere Biter", "Geriden Gelip Kazanır"],
+  "gol": ["Toplam Gol Üst/Alt", "KG Var/Yok", "Toplam Gol Aralığı", "Ev Gol Aralığı", "Dep Gol Aralığı", "Ev Gol Yer", "Dep Gol Yer", "Gol Yemeden Kazanır"],
+  "ilk_ikinci_yari": ["İlk Yarı Sonucu", "İkinci Yarı Sonucu", "Ev İlk Yarı 0.5", "Ev İlk Yarı 1.5", "Ev İlk Yarı 2.5", "Dep İlk Yarı 0.5", "Dep İlk Yarı 1.5", "Dep İlk Yarı 2.5", "Ev İkinci Yarı 0.5", "Ev İkinci Yarı 1.5", "Ev İkinci Yarı 2.5", "Dep İkinci Yarı 0.5", "Dep İkinci Yarı 1.5", "Dep İkinci Yarı 2.5", "Her İki Yarıda Gol", "Her İki Yarıda 1.5 Üst"],
+  "takim_bazli": ["Ev Her İki Yarıda Gol Atar", "Dep Her İki Yarıda Gol Atar"],
+  "korner": ["Toplam Korner", "İlk Yarı Korner", "Takım Korner", "Korner Handikap"],
+  "kart": ["Toplam Kart", "Takım Kart", "Kırmızı Kart", "İlk Yarı Kart"],
+  "zaman_bazli": ["İlk 10 Dk Gol", "15-30 Dk Arası Gol", "Son 15 Dk Gol", "Maçın Geri Kalanını Kazanır"],
+  "ozel_oyuncu": ["Gol Atacak Oyuncu", "İlk Golü Atan Oyuncu", "Penaltı Olur mu", "VAR Kararı", "Ofsayt Gol", "Kendi Kalesine Gol"],
+  "toplam_istatistik": ["Toplam Şut", "İsabetli Şut", "Ofsayt Sayısı"],
+  "turnuva": ["Kupa Kazananı", "Finalist", "Çeyrek Final / Yarı Final", "Gruplardan Çıkma"],
+  "diger": ["Uzatmalara Gider", "Penaltılara Gider"]
+};
+
+function hataGoster(m) {
+  const el = document.getElementById("debug");
+  el.style.display = "block";
+  el.textContent = "HATA: " + m;
+  setTimeout(() => { el.style.display = "none"; }, 12000);
+}
+
+function basariGoster(m) {
+  const el = document.getElementById("basari");
+  el.style.display = "block";
+  el.textContent = m;
+  setTimeout(() => { el.style.display = "none"; }, 4000);
+}
+
+function tlFormat(n) {
+  return new Intl.NumberFormat('tr-TR', {maximumFractionDigits: 2}).format(n) + " TL";
+}
+
+async function kontrol() {
+  const { data: { session } } = await client.auth.getSession();
+  if (!session) { window.location.href = "login.html"; return; }
+  mevcutKullanici = session.user.id;
+
+  // Kasa ID'sini bul
+  const { data: profil } = await client.from("profiles").select("kasa_id").eq("auth_id", mevcutKullanici).single();
+  if (profil) kasaId = profil.kasa_id;
+
+  await kombineFonuYukle();
+  await kuponGecmisYukle();
+}
+
+async function kombineFonuYukle() {
+  if (!kasaId) return;
+  const { data, error } = await client.from("ayarlar").select("kombine_fon").eq("kasa_id", kasaId).single();
+  if (error) { hataGoster("Fon yükleme: " + error.message); return; }
+  kombineFon = parseFloat(data?.kombine_fon) || 0;
+  document.getElementById("kombineFon").textContent = tlFormat(kombineFon);
+}
+
+function macAltMarketGuncelle() {
+  const kategori = document.getElementById("macKategori").value;
+  const altMarketSelect = document.getElementById("macAltMarket");
+  altMarketSelect.innerHTML = '<option value="">Seçiniz...</option>';
+
+  if (!kategori || !MARKET_LISTESI[kategori]) return;
+
+  MARKET_LISTESI[kategori].forEach(function(m) {
+    const opt = document.createElement("option");
+    opt.value = m;
+    opt.textContent = m;
+    altMarketSelect.appendChild(opt);
+  });
+}
+
+function macYonGuncelle() {
+  const secilenAlt = document.getElementById("macAltMarket").value;
+  const yonSelect = document.getElementById("macYon");
+  yonSelect.innerHTML = "";
+
+  if (secilenAlt === "KG Var/Yok" || secilenAlt === "Kırmızı Kart" || secilenAlt === "Penaltı Olur mu" || secilenAlt === "VAR Kararı" || secilenAlt === "Ofsayt Gol" || secilenAlt === "Kendi Kalesine Gol" || secilenAlt === "Ev Her İki Yarıda Gol Atar" || secilenAlt === "Dep Her İki Yarıda Gol Atar" || secilenAlt === "Her İki Yarıda Gol") {
+    yonSelect.innerHTML = '<option value="var">Var</option><option value="yok_deger">Yok</option>';
+  }
+  else if (secilenAlt === "Maç Sonucu (1X2)" || secilenAlt === "Çifte Şans" || secilenAlt === "İlk Yarı Sonucu" || secilenAlt === "İkinci Yarı Sonucu" || secilenAlt === "Handikap") {
+    yonSelect.innerHTML = '<option value="yok">Yok (sabit bahis)</option>';
+  }
+  else {
+    yonSelect.innerHTML = '<option value="üst">Üst</option><option value="alt">Alt</option><option value="yok">Yok (sabit bahis)</option>';
+  }
+}
+
+function macEkle() {
+  const ev = document.getElementById("macEv").value.trim();
+  const dep = document.getElementById("macDep").value.trim();
+  const kategori = document.getElementById("macKategori").value;
+  const altMarket = document.getElementById("macAltMarket").value;
+  const deger = document.getElementById("macDeger").value.trim();
+  const yon = document.getElementById("macYon").value;
+  const oran = parseFloat(document.getElementById("macOran").value);
+  const guven = parseFloat(document.getElementById("macGuven").value) || null;
+
+  if (!ev || !dep || !altMarket || !oran) {
+    hataGoster("Takım, alt market ve oran zorunlu.");
+    return;
+  }
+
+  const marketDetay = (deger && yon !== "yok" && yon !== "yok_deger") ? (deger + " " + yon) : (deger || "");
+  const market = altMarket + (marketDetay ? " — " + marketDetay : "") + (yon === "yok_deger" ? " (Yok)" : "") + (yon === "var" ? " (Var)" : "");
+
+  kuponMaclari.push({
+    ev: ev,
+    dep: dep,
+    kategori: kategori,
+    altMarket: altMarket,
+    market: market,
+    oran: oran,
+    guven: guven,
+    sonuc: "bekliyor"
+  });
+
+  // Formu temizle
+  document.getElementById("macEv").value = "";
+  document.getElementById("macDep").value = "";
+  document.getElementById("macDeger").value = "";
+  document.getElementById("macOran").value = "";
+  document.getElementById("macGuven").value = "";
+
+  macListesiGuncelle();
+}
+
+function macListesiGuncelle() {
+  const el = document.getElementById("macListesi");
+  if (kuponMaclari.length === 0) {
+    el.innerHTML = '<div class="bos">Henüz maç eklenmedi.</div>';
+    document.getElementById("kuponOzet").style.display = "none";
+    document.getElementById("kaydetBtn").style.display = "none";
+    document.getElementById("lotaryaUyari").classList.remove("aktif");
+    return;
+  }
+
+  el.innerHTML = kuponMaclari.map(function(m, i) {
+    const guvenText = m.guven ? ' | Güven: %' + m.guven : '';
+    return '<div class="mac-kart">' +
+      '<div class="mac">' + (i + 1) + '. ' + m.ev + ' - ' + m.dep + ' <span style="cursor:pointer;color:#ef4444;float:right" onclick="macSil(' + i + ')">✕</span></div>' +
+      '<div class="market">' + m.market + '</div>' +
+      '<div><span class="oran">Oran: ' + m.oran + '</span>' + guvenText + '</div>' +
+      '</div>';
+  }).join("");
+
+  ozetGuncelle();
+}
+
+function macSil(index) {
+  kuponMaclari.splice(index, 1);
+  macListesiGuncelle();
+}
+
+function ozetGuncelle() {
+  if (kuponMaclari.length === 0) return;
+
+  // Toplam oran
+  let toplamOran = 1;
+  kuponMaclari.forEach(function(m) { toplamOran *= m.oran; });
+
+  // Tutma olasılığı
+  const guvenliMaclar = kuponMaclari.filter(function(m) { return m.guven; });
+  let tutmaOlasilik = null;
+  if (guvenliMaclar.length === kuponMaclari.length && guvenliMaclar.length > 0) {
+    tutmaOlasilik = 1;
+    guvenliMaclar.forEach(function(m) { tutmaOlasilik *= (m.guven / 100); });
+    tutmaOlasilik *= 100;
+  }
+
+  const tutar = parseFloat(document.getElementById("kuponTutar").value) || 0;
+  const kazanc = tutar * toplamOran;
+
+  document.getElementById("ozetToplamOran").textContent = toplamOran.toFixed(2);
+  document.getElementById("ozetTutmaOlasilik").textContent = tutmaOlasilik !== null ? tutmaOlasilik.toFixed(2) + "%" : "—";
+  document.getElementById("ozetTutar").textContent = tlFormat(tutar);
+  document.getElementById("ozetKazanc").textContent = tlFormat(kazanc);
+
+  // Lotarya uyarısı
+  if (tutmaOlasilik !== null && tutmaOlasilik < 5) {
+    document.getElementById("lotaryaUyari").classList.add("aktif");
+  } else {
+    document.getElementById("lotaryaUyari").classList.remove("aktif");
+  }
+
+  document.getElementById("kuponOzet").style.display = "block";
+  document.getElementById("kaydetBtn").style.display = "block";
+}
+  async function kuponKaydet() {
+  const kuponAdi = document.getElementById("kuponAdi").value.trim();
+  const macTarihi = document.getElementById("kuponMacTarihi").value;
+  const tutar = parseFloat(document.getElementById("kuponTutar").value);
+
+  if (!kuponAdi) { hataGoster("Kupon adı zorunlu."); return; }
+  if (!macTarihi) { hataGoster("Maç tarihi zorunlu."); return; }
+  if (!tutar || tutar <= 0) { hataGoster("Bahis tutarı zorunlu."); return; }
+  if (kuponMaclari.length === 0) { hataGoster("En az bir maç ekleyin."); return; }
+  if (tutar > kombineFon) { hataGoster("Yetersiz fon. Mevcut: " + tlFormat(kombineFon)); return; }
+
+  // Toplam oran
+  let toplamOran = 1;
+  kuponMaclari.forEach(function(m) { toplamOran *= m.oran; });
+  const potansiyelKazanc = tutar * toplamOran;
+
+  // Tutma olasılığı
+  const guvenliMaclar = kuponMaclari.filter(function(m) { return m.guven; });
+  let tutmaOlasilik = null;
+  if (guvenliMaclar.length === kuponMaclari.length && guvenliMaclar.length > 0) {
+    tutmaOlasilik = 1;
+    guvenliMaclar.forEach(function(m) { tutmaOlasilik *= (m.guven / 100); });
+    tutmaOlasilik *= 100;
+  }
+
+  // Kupon numarası al
+  const { data: sonKupon } = await client.from("coupons")
+    .select("kupon_no")
+    .eq("kasa_id", kasaId)
+    .order("kupon_no", { ascending: false })
+    .limit(1);
+  const yeniKuponNo = (sonKupon && sonKupon.length > 0) ? (sonKupon[0].kupon_no || 0) + 1 : 1;
+
+  // Kaydet
+  const { error: cErr } = await client.from("coupons").insert({
+    coupon_type: "kombine",
+    title: kuponAdi,
+    kupon_no: yeniKuponNo,
+    total_odds: toplamOran,
+    stake: tutar,
+    potential_return: potansiyelKazanc,
+    result: "bekliyor",
+    mac_detaylari: JSON.stringify(kuponMaclari),
+    mac_tarihi: macTarihi,
+    toplam_olasilik: tutmaOlasilik,
+    kasa_id: kasaId,
+    created_by: mevcutKullanici
+  });
+
+  if (cErr) { hataGoster("Kupon kaydetme: " + cErr.message); return; }
+
+  // Fondan düş
+  const yeniFon = kombineFon - tutar;
+  const { error: aErr } = await client.from("ayarlar").update({ kombine_fon: yeniFon }).eq("kasa_id", kasaId);
+  if (aErr) { hataGoster("Fon güncelleme: " + aErr.message); return; }
+
+  // Bankroll'a kayıt at (geçmiş için)
+  await client.from("bankroll").insert({
+    mac: "KOMBİNE #" + yeniKuponNo + ": " + kuponAdi,
+    market: "Kombine kupon",
+    amount: -tutar,
+    transaction_type: "kombine",
+    kasa_id: kasaId,
+    kasa_tipi: "kombine_fon",
+    bahis_durumu: "bekliyor",
+    note: kuponAdi + " (" + kuponMaclari.length + " maç)",
+    created_by: mevcutKullanici
+  });
+
+  basariGoster("Kupon #" + yeniKuponNo + " kaydedildi!");
+  
+  // Formu temizle
+  kuponMaclari = [];
+  document.getElementById("kuponAdi").value = "";
+  document.getElementById("kuponMacTarihi").value = "";
+  document.getElementById("kuponTutar").value = "";
+  macListesiGuncelle();
+  await kombineFonuYukle();
+  await kuponGecmisYukle();
+}
+
+async function kuponGecmisYukle() {
+  const baslangic = (sayfa - 1) * SAYFA_BOYUT;
+  const bitis = baslangic + SAYFA_BOYUT - 1;
+
+  const { data, error, count } = await client.from("coupons")
+    .select("*", { count: "exact" })
+    .eq("kasa_id", kasaId)
+    .eq("coupon_type", "kombine")
+    .order("created_at", { ascending: false })
+    .range(baslangic, bitis);
+
+  if (error) { hataGoster("Geçmiş: " + error.message); return; }
+  toplamKupon = count || 0;
+
+  const el = document.getElementById("kuponGecmis");
+  if (!data || data.length === 0) {
+    el.innerHTML = '<div class="bos">Henüz kombine yok.</div>';
+    document.getElementById("sayfalama").style.display = "none";
+    return;
+  }
+
+  // Profilleri çek
+  const { data: profiller } = await client.from("profiles").select("auth_id, display_name, avatar_color");
+  const profilMap = {};
+  if (profiller) profiller.forEach(p => { profilMap[p.auth_id] = p; });
+
+  el.innerHTML = data.map(function(k) {
+    const tarih = new Date(k.created_at).toLocaleString('tr-TR', {day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
+    const maclar = k.mac_detaylari ? JSON.parse(k.mac_detaylari) : [];
+    const sonuc = k.result || "bekliyor";
+    const sonucEtiket = sonuc === "kazandi" ? "✅ KAZANDI" : (sonuc === "kaybetti" ? "❌ KAYBETTİ" : (sonuc === "bozduruldu" ? "💰 BOZDURULDU" : "⏳ BEKLİYOR"));
+
+    // Kim yaptı?
+    let kimHtml = "";
+    if (k.created_by && profilMap[k.created_by]) {
+      const p = profilMap[k.created_by];
+      const renk = p.avatar_color === "blue" ? "#3b82f6" : (p.avatar_color === "green" ? "#22c55e" : "#888");
+      kimHtml = '<div class="kim"><span class="nokta" style="background:' + renk + '"></span>' + p.display_name + '</div>';
+    }
+
+    const macSatirlari = maclar.map(function(m, i) {
+      let mini = "";
+      if (m.sonuc === "kazandi") mini = '<span class="sonuc-mini s-kazandi">✅</span>';
+      else if (m.sonuc === "kaybetti") mini = '<span class="sonuc-mini s-kaybetti">❌</span>';
+      else if (m.sonuc === "bozduruldu") mini = '<span class="sonuc-mini s-bozduruldu">💰</span>';
+      else mini = '<span class="sonuc-mini s-bekliyor">⏳</span>';
+      return '<div class="maç-satir">' + (i + 1) + '. ' + m.ev + ' - ' + m.dep + ' | ' + m.market + ' | Oran: ' + m.oran + ' ' + mini + '</div>';
+    }).join("");
+
+    return '<div class="gecmis-kupon ' + sonuc + '" onclick="kuponToggle(this)">' +
+      '<div class="baslik">' +
+      '<div><div class="kupon-adi">' + k.title + ' — Kupon #' + k.kupon_no + '</div>' +
+      '<div class="tarih">Oluşturulma: ' + tarih + (k.mac_tarihi ? ' | Maç Tarihi: ' + k.mac_tarihi : '') + '</div></div>' +
+      '<span class="sonuc-etiket">' + sonucEtiket + '</span>' +
+      '</div>' +
+      '<div>Toplam Oran: ' + (k.total_odds || 0).toFixed(2) + ' | Tutar: ' + tlFormat(k.stake || 0) + ' | Potansiyel: ' + tlFormat(k.potential_return || 0) + '</div>' +
+      (k.toplam_olasilik ? '<div>Tutma Olasılığı: %' + parseFloat(k.toplam_olasilik).toFixed(2) + '</div>' : '') +
+      kimHtml +
+      '<div class="maç-liste">' + macSatirlari + '</div>' +
+      '</div>';
+  }).join("");
+
+  // Sayfalama
+  const toplamSayfa = Math.ceil(toplamKupon / SAYFA_BOYUT) || 1;
+  document.getElementById("sayfaBilgi").textContent = "Sayfa " + sayfa + " / " + toplamSayfa;
+  document.getElementById("oncekiBtn").disabled = sayfa <= 1;
+  document.getElementById("sonrakiBtn").disabled = sayfa >= toplamSayfa;
+  document.getElementById("sayfalama").style.display = "flex";
+}
+
+function kuponToggle(el) {
+  el.classList.toggle("acik");
+}
+
+function oncekiSayfa() {
+  if (sayfa > 1) { sayfa--; kuponGecmisYukle(); }
+}
+
+function sonrakiSayfa() {
+  const toplamSayfa = Math.ceil(toplamKupon / SAYFA_BOYUT) || 1;
+  if (sayfa < toplamSayfa) { sayfa++; kuponGecmisYukle(); }
+}
+
+async function fonBesle() {
+  const miktar = prompt("Ana kasadan kombine fonuna ne kadar aktarılsın? (TL)");
+  if (!miktar) return;
+  const tutar = parseFloat(miktar);
+  if (!tutar || tutar <= 0) { hataGoster("Geçersiz tutar."); return; }
+
+  const { data: ayar } = await client.from("ayarlar").select("ana_kasa, kombine_fon").eq("kasa_id", kasaId).single();
+  if (!ayar) { hataGoster("Ayar okunamadı."); return; }
+  if (tutar > ayar.ana_kasa) { hataGoster("Ana kasada yeterli para yok."); return; }
+
+  const yeniAna = parseFloat(ayar.ana_kasa) - tutar;
+  const yeniFon = parseFloat(ayar.kombine_fon || 0) + tutar;
+
+  await client.from("ayarlar").update({ ana_kasa: yeniAna, kombine_fon: yeniFon }).eq("kasa_id", kasaId);
+  
+  await client.from("bankroll").insert({
+    mac: "FON TRANSFERİ: Ana Kasa → Kombine Fonu",
+    market: "Kasa transferi",
+    amount: tutar,
+    transaction_type: "transfer",
+    kasa_id: kasaId,
+    kasa_tipi: "kombine_fon",
+    bahis_durumu: "transfer",
+    note: "Ana Kasa → Kombine Fonu",
+    created_by: mevcutKullanici
+  });
+
+  basariGoster(tlFormat(tutar) + " kombine fonuna aktarıldı.");
+  await kombineFonuYukle();
+}
+
+async function anaKasayaAktar() {
+  if (kombineFon <= 0) { hataGoster("Kombine fonunda para yok."); return; }
+  const miktar = prompt("Kombine fonundan ana kasaya ne kadar aktarılsın? (TL) - Mevcut: " + tlFormat(kombineFon));
+  if (!miktar) return;
+  const tutar = parseFloat(miktar);
+  if (!tutar || tutar <= 0 || tutar > kombineFon) { hataGoster("Geçersiz tutar."); return; }
+
+  const { data: ayar } = await client.from("ayarlar").select("ana_kasa, kombine_fon").eq("kasa_id", kasaId).single();
+  const yeniAna = parseFloat(ayar.ana_kasa) + tutar;
+  const yeniFon = parseFloat(ayar.kombine_fon) - tutar;
+
+  await client.from("ayarlar").update({ ana_kasa: yeniAna, kombine_fon: yeniFon }).eq("kasa_id", kasaId);
+  
+  await client.from("bankroll").insert({
+    mac: "FON TRANSFERİ: Kombine Fonu → Ana Kasa",
+    market: "Kasa transferi",
+    amount: tutar,
+    transaction_type: "transfer",
+    kasa_id: kasaId,
+    kasa_tipi: "ana_kasa",
+    bahis_durumu: "transfer",
+    note: "Kombine Fonu → Ana Kasa",
+    created_by: mevcutKullanici
+  });
+
+  basariGoster(tlFormat(tutar) + " ana kasaya aktarıldı.");
+  await kombineFonuYukle();
+}
+
+// Tutar değişince özet güncelle
+document.getElementById("kuponTutar").addEventListener("input", ozetGuncelle);
+
+kontrol();
+  </script>
+</body>
+</html>
