@@ -327,9 +327,8 @@ async function kontrol() {
   mevcutKullanici = session.user.id;
 
   // Kasa ID'sini bul
-  const { data: profil } = await client.from("profiles").select("kasa_id").eq("auth_id", mevcutKullanici).single();
-  if (profil) { kasaId = profil.kasa_id; document.getElementById("debug").textContent = "✅ kasaId: " + kasaId; }
-else { document.getElementById("debug").textContent = "❌ profil null! auth_id: " + mevcutKullanici; }
+  const { data: ayarKasa } = await client.from("ayarlar").select("kasa_id").limit(1).single();
+if (ayarKasa) kasaId = ayarKasa.kasa_id;
 
   await kombineFonuYukle();
   await kuponGecmisYukle();
