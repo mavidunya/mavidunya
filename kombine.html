@@ -332,6 +332,7 @@ async function kontrol() {
 
   await kombineFonuYukle();
   await kuponGecmisYukle();
+  await kombineOzetYukle();
 }
 
 async function kombineFonuYukle() {
@@ -752,8 +753,7 @@ async function anaKasayaAktar() {
 }
 
 // Tutar değişince özet güncelle
-document.getElementById("kuponTutar").addEventListener("input", ozetGuncelle);
-  kombineOzetYukle();
+document.getElementById("kuponTutar").addEventListener("input", gözetim);
 
 kontrol();
   </script>
