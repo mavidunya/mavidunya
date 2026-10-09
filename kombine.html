@@ -328,7 +328,8 @@ async function kontrol() {
 
   // Kasa ID'sini bul
   const { data: profil } = await client.from("profiles").select("kasa_id").eq("auth_id", mevcutKullanici).single();
-  if (profil) kasaId = profil.kasa_id;
+  if (profil) { kasaId = profil.kasa_id; alert("✅ kasaId: " + kasaId); }
+else { alert("❌ profil null! auth_id: " + mevcutKullanici); }
 
   await kombineFonuYukle();
   await kuponGecmisYukle();
