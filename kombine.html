@@ -340,10 +340,8 @@ let kasaId = null;
     await kuponGecmisYukle();
     await kombineOzetYukle();
     } else {
-    // EKRANA YAZDIR (Hata ayıklama için)
-    document.body.innerHTML += "<div style='background:red;color:white;padding:20px;font-size:20px;text-align:center;z-index:9999;position:relative;'>HATA: " + (ayarHata ? ayarHata.message : "Ayar bulunamadı ama hata mesajı yok") + "</div>";
+    alert("HATA: Veri çekilemedi! Detay: " + (ayarHata ? ayarHata.message : "Bilinmeyen hata"));
   }
-}
 
   async function kombineOzetYukle() {
   const { data, error } = await client.from("coupons")
