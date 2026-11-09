@@ -321,30 +321,30 @@ function tlFormat(n) {
   return new Intl.NumberFormat('tr-TR', {maximumFractionDigits: 2}).format(n) + " TL";
 }
 let kasaId = null;
-async function kontrol() {
+  async function kontrol() {
   const { data: { session } } = await client.auth.getSession();
   if (!session) { window.location.href = "login.html"; return; }
   mevcutKullanici = session.user.id;
 
-  // index.html'deki gibi kasa_id'yi bul
-  const { data: kasaProfil } = await client.from("profiles").select("kasa_id").eq("auth_id", session.user.id).single();
+  // Kasa ID'yi bulmakla uğraşmıyoruz. Direkt ayarlar tablosundaki ilk kaydı alıyoruz.
+  const { data: ayar, error: ayarHata } = await client.from("ayarlar").select("kasa_id, kombine_fon").limit(1).single();
   
-  if (kasaProfil) {
-    kasaId = kasaProfil.kasa_id;
-  } else {
-    // Eğer profilde yoksa ayarlardan ilk ID'yi al (yedek plan)
-    const { data: ilkAyar } = await client.from("ayarlar").select("kasa_id").limit(1).single();
-    if (ilkAyar) kasaId = ilkAyar.kasa_id;
-  }
+  if (ayar && ayar.kasa_id) {
+    kasaId = ayar.kasa_id;
+    
+    // Veritabanından gelen kombine fonunu direkt ekrana yazdırıyoruz (kombineFonuYukle fonksiyonuna gerek kalmadan)
+    kombineFon = parseFloat(ayar.kombine_fon) || 0;
+    document.getElementById("kombineFon").textContent = tlFormat(kombineFon);
 
-  if (kasaId) {
-    await kombineFonuYukle();
+    // Diğer yüklemeleri yap
     await kuponGecmisYukle();
     await kombineOzetYukle();
   } else {
-    hataGoster("Kasa ID bulunamadı!");
+    hataGoster("Kasa ayarları bulunamadı!");
+    console.log("Ayar Hatası:", ayarHata);
   }
 }
+
   async function kombineOzetYukle() {
   const { data, error } = await client.from("coupons")
     .select("result, stake, potential_return")
