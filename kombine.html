@@ -320,7 +320,7 @@ function basariGoster(m) {
 function tlFormat(n) {
   return new Intl.NumberFormat('tr-TR', {maximumFractionDigits: 2}).format(n) + " TL";
 }
-
+let kasaId = null;
 async function kontrol() {
   const { data: { session } } = await client.auth.getSession();
   if (!session) { window.location.href = "login.html"; return; }
