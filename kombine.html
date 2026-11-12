@@ -322,26 +322,47 @@ function tlFormat(n) {
 }
 let kasaId = null;
   async function kontrol() {
-  const { data: { session } } = await client.auth.getSession();
-  if (!session) { window.location.href = "login.html"; return; }
-  mevcutKullanici = session.user.id;
+  try {
+    const { data: { session }, error: sessErr } = await client.auth.getSession();
+    if (sessErr) { hataGoster("Session: " + sessErr.message); return; }
+    if (!session) { window.location.href = "login.html"; return; }
+    const email = session.user.email;
 
-  // Kasa ID'yi bulmakla uğraşmıyoruz. Direkt ayarlar tablosundaki ilk kaydı alıyoruz.
-  const { data: ayar, error: ayarHata } = await client.from("ayarlar").select("kasa_id, kombine_fon").limit(1).single();
-  
-  if (ayar && ayar.kasa_id) {
-    kasaId = ayar.kasa_id;
-    
-    // Veritabanından gelen kombine fonunu direkt ekrana yazdırıyoruz (kombineFonuYukle fonksiyonuna gerek kalmadan)
-    kombineFon = parseFloat(ayar.kombine_fon) || 0;
-    document.getElementById("kombineFon").textContent = tlFormat(kombineFon);
-
-    // Diğer yüklemeleri yap
-    await kuponGecmisYukle();
-    await kombineOzetYukle();
+    const { data: profil } = await client.from("profiles").select("display_name, avatar_color").eq("email", email).maybeSingle();
+    if (profil) {
+      const simdi = new Date();
+const tarihSaat = simdi.toLocaleString('tr-TR', {day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
+document.getElementById("hosgeldin").textContent = "Hos geldin, " + profil.display_name + " — " + tarihSaat;
+      const dot = document.getElementById("userDot");
+      if (profil.avatar_color === "blue") { dot.style.background = "#3b82f6"; dot.classList.add("blue"); }
+      else if (profil.avatar_color === "green") { dot.style.background = "#22c55e"; }
     } else {
-    alert("HATA: Veri çekilemedi! Detay: " + (ayarHata ? ayarHata.message : "Bilinmeyen hata"));
-  }
+      document.getElementById("hosgeldin").textContent = "Hos geldin, " + email;
+    }
+
+    const { data: kasaProfil } = await client.from("profiles").select("kasa_id").eq("auth_id", session.user.id).single();
+const { data: ayar, error: aErr } = await client.from("ayarlar").select("*").eq("kasa_id", kasaProfil.kasa_id).single();
+    if (aErr) { hataGoster("Ayarlar: " + aErr.message); return; }
+    if (ayar) {
+      const hedef = parseFloat(ayar.hedef) || 0;
+      const ana = parseFloat(ayar.ana_kasa) || 0;
+      const yedek = parseFloat(ayar.yedek_kasa) || 0;
+      const aktif = parseFloat(ayar.aktif_rolling) || 0;
+      const kilit = parseFloat(ayar.kilitli_kar) || 0;
+
+      document.getElementById("hedefRakam").textContent = tlFormat(hedef);
+      document.getElementById("anaKasa").textContent = tlFormat(ana);
+      document.getElementById("yedekKasa").textContent = tlFormat(yedek);
+      document.getElementById("aktifRolling").textContent = tlFormat(aktif);
+      document.getElementById("kilitliKar").textContent = tlFormat(kilit);
+
+      const toplam = ana + yedek + aktif + kilit;
+      const yuzde = hedef > 0 ? Math.min(100, (toplam / hedef) * 100) : 0;
+      document.getElementById("ilerlemeBar").style.width = yuzde + "%";
+      document.getElementById("yuzde").textContent = "%" + yuzde.toFixed(2) + " tamamlandı";
+    }
+  } catch (e) { console.log("Önemsiz uyarı:", e.message); }
+}
 
   async function kombineOzetYukle() {
   const { data, error } = await client.from("coupons")
