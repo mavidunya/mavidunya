@@ -244,17 +244,21 @@ async function kontrol() {
     if (!session) { window.location.href = "login.html"; return; }
     mevcutKullanici = session.user.id;
 
-    const { data: kasaProfil } = await client.from("profiles").select("kasa_id").eq("auth_id", mevcutKullanici).single();
+    // Kasa ID'yi garantiye alalım (Hata vermesin diye .limit(1) kullanıyoruz)
+    const { data: ayarListesi, error: ayarHata } = await client.from("ayarlar").select("kasa_id, kombine_fon").limit(1);
     
-    if (kasaProfil) {
-      kasaId = kasaProfil.kasa_id;
-      await kombineFonuYukle();
+    if (ayarListesi && ayarListesi.length > 0) {
+      kasaId = ayarListesi[0].kasa_id;
+      kombineFon = parseFloat(ayarListesi[0].kombine_fon) || 0;
+      
+      // Fonu ve geçmişi yükle
+      document.getElementById("kombineFon").textContent = tlFormat(kombineFon);
       await kuponGecmisYukle();
       await kombineOzetYukle();
     } else {
-      hataGoster("Kasa ID bulunamadı!");
+      hataGoster("Kasa ayarları bulunamadı! Hata: " + (ayarHata ? ayarHata.message : "Kayıt yok"));
     }
-  } catch (e) { console.log("Önemsiz uyarı:", e.message); }
+  } catch (e) { console.log("Hata:", e.message); hataGoster(e.message); }
 }
 
 async function kombineFonuYukle() {
