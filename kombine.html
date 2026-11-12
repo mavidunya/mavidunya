@@ -243,18 +243,16 @@ async function kontrol() {
     if (!session) { window.location.href = "login.html"; return; }
     mevcutKullanici = session.user.id;
 
-    // Kasa ID'yi garantiye alalım (Hata vermesin diye .limit(1) kullanıyoruz)
     const { data: ayarListesi, error: ayarHata } = await client.from("ayarlar").select("kasa_id, kombine_fon").limit(1);
     
     if (ayarListesi && ayarListesi.length > 0) {
       kasaId = ayarListesi[0].kasa_id;
       kombineFon = parseFloat(ayarListesi[0].kombine_fon) || 0;
       
-      // Fonu ve geçmişi yükle
       document.getElementById("kombineFon").textContent = tlFormat(kombineFon);
       await kuponGecmisYukle();
       await kombineOzetYukle();
-        } else {
+    } else {
       hataGoster("Kasa ayarları bulunamadı!");
       document.getElementById("kuponGecmis").innerHTML = '<div class="bos" style="color:red;font-weight:bold">HATA: Ayar bulunamadı</div>';
     }
