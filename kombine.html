@@ -254,10 +254,15 @@ async function kontrol() {
       document.getElementById("kombineFon").textContent = tlFormat(kombineFon);
       await kuponGecmisYukle();
       await kombineOzetYukle();
-    } else {
-      hataGoster("Kasa ayarları bulunamadı! Hata: " + (ayarHata ? ayarHata.message : "Kayıt yok"));
+        } else {
+      hataGoster("Kasa ayarları bulunamadı!");
+      document.getElementById("kuponGecmis").innerHTML = '<div class="bos" style="color:red;font-weight:bold">HATA: Ayar bulunamadı</div>';
     }
-  } catch (e) { console.log("Hata:", e.message); hataGoster(e.message); }
+  } catch (e) { 
+    console.log("Hata:", e.message); 
+    hataGoster(e.message); 
+    document.getElementById("kuponGecmis").innerHTML = '<div class="bos" style="color:red;font-weight:bold">HATA: ' + e.message + '</div>';
+  }
 }
 
 async function kombineFonuYukle() {
