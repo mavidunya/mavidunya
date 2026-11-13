@@ -44,8 +44,14 @@ p{font-size:1.05em;opacity:0.95}
 <body>
 
 <div class="card">
-    <div id="kasaGecisPaneli" style="display: none; text-align: center; margin-bottom: 20px;">
-    <button onclick="kasaYukle('ortak')" style="background: #f59e0b; color: white; padding: 10px 20px; border: none; border-radius: 8px; font-size: 1em; font-weight: bold; cursor: pointer;">💰 Ortak Kasayı Aç</button>
+    <!-- KASA SEÇİM BUTONU (Sağ Üst Köşe) -->
+<div id="kasaGecisPaneli" style="display: none; position: absolute; top: 20px; right: 20px; z-index: 100;">
+    <button onclick="menuAcKapa()" style="background: #f59e0b; color: white; padding: 8px 15px; border: none; border-radius: 8px; font-size: 0.85em; font-weight: bold; cursor: pointer;">
+        💰 <span id="aktifKasaAdi">Ortak Kasa</span> ▼
+    </button>
+    <div id="kasaMenuListesi" style="display: none; position: absolute; top: 100%; right: 0; background: #1e3c72; border: 1px solid rgba(255,255,255,0.2); border-radius: 8px; width: 150px; z-index: 100; margin-top: 5px; box-shadow: 0 4px 6px rgba(0,0,0,0.3);">
+        <!-- Seçenekler buraya JavaScript ile gelecek -->
+    </div>
 </div>
 <h1>🌊 Mavidunya</h1>
 <div class="user-row">
@@ -58,15 +64,13 @@ p{font-size:1.05em;opacity:0.95}
 🎯 Hedef Kazanç
 <span class="rakam" id="hedefRakam">0 TL</span>
 </div>
+    <div class="hedef" style="margin-top: 5px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 10px;">
+    🏦 Toplam Varlık
+    <span class="rakam" id="toplamVarlik" style="color:#4ade80;">0 TL</span>
+</div>
 <div class="ilerleme"><div class="ilerleme-bar" id="ilerlemeBar"></div></div>
 <div class="yuzde" id="yuzde">%0 tamamlandı</div>
 
-<div class="kasa-grid">
-<div class="kasa-kutu"><div class="baslik">💰 Ana Kasa</div><div class="tutar" id="anaKasa">0 TL</div></div>
-<div class="kasa-kutu"><div class="baslik">🔒 Yedek Kasa</div><div class="tutar" id="yedekKasa">0 TL</div></div>
-<div class="kasa-kutu"><div class="baslik">⚡ Aktif Rolling</div><div class="tutar" id="aktifRolling">0 TL</div></div>
-<div class="kasa-kutu"><div class="baslik">🔐 Kilitli Kâr</div><div class="tutar" id="kilitliKar">0 TL</div></div>
-</div>
 
 <div id="debug" class="hata"></div>
 
