@@ -116,13 +116,14 @@ async function kontrol() {
       document.getElementById("hosgeldin").textContent = "Hoş geldin, " + profil.display_name;
       
       // Admin kontrolü
-      if (profil.rol === "admin") {
-        document.getElementById("kasaGecisPaneli").style.display = "block"; 
-        await kasaYukle('ortak'); 
-      } else {
-        document.getElementById("kasaGecisPaneli").style.display = "none"; 
-        await kasaYukle('kisisel'); 
-      }
+    if (profil.rol === "admin") {
+      document.getElementById("kasaGecisPaneli").style.display = "block";
+      await kasaMenuDoldur();
+      await kasaYukle('ortak');
+    } else {
+      document.getElementById("kasaGecisPaneli").style.display = "none";
+      await kasaYukle('kisisel');
+    }
     } else {
       document.getElementById("hosgeldin").textContent = "Profil bulunamadı!";
     }
@@ -135,7 +136,38 @@ async function cikisYap() {
   await client.auth.signOut();
   window.location.href = "login.html";
 }
+// Menüyü Aç/Kapa
+function menuAcKapa() {
+  const menu = document.getElementById("kasaMenuListesi");
+  menu.style.display = menu.style.display === "none" ? "block" : "none";
+}
 
+// Kasaları Veritabanından Çek ve Menüye Ekle
+async function kasaMenuDoldur() {
+  const { data: kasalar, error } = await client.from("kasalar").select("*");
+  if (error || !kasalar) return;
+  
+  const menu = document.getElementById("kasaMenuListesi");
+  menu.innerHTML = ""; // İçini temizle
+
+  kasalar.forEach(kasa => {
+    const secenek = document.createElement("div");
+    secenek.textContent = kasa.kasa_adi;
+    secenek.style.cssText = "padding: 12px; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.1); font-weight: bold; color: white; text-align: left;";
+    
+    // Üzerine gelince renk değişsin
+    secenek.onmouseover = () => secenek.style.background = "rgba(255,255,255,0.1)";
+    secenek.onmouseout = () => secenek.style.background = "transparent";
+    
+    // Tıklandığında o kasayı yükle ve buton adını değiştir
+    secenek.onclick = () => {
+        document.getElementById("aktifKasaAdi").textContent = kasa.kasa_adi;
+        kasaYukle(kasa.kasa_adi); 
+    };
+    
+    menu.appendChild(secenek);
+  });
+}
 function kasaYukle(tip) {
   // Şimdilik sadece test edelim
 }
