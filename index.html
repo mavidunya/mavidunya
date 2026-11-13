@@ -92,25 +92,40 @@ function tlFormat(n) {
 }
 
 async function kontrol() {
-  const { data: { session } } = await client.auth.getSession();
-  if (!session) { window.location.href = "login.html"; return; }
-  mevcutKullanici = session.user.id;
+  try {
+    const { data: { session } } = await client.auth.getSession();
+    if (!session) { window.location.href = "login.html"; return; }
+    mevcutKullanici = session.user.id;
 
-  // 1. Kullanıcı profilini ve rolünü çek
-  const { data: profil } = await client.from("profiles").select("display_name, rol").eq("auth_id", session.user.id).single();
-  
-  if (profil) {
-    document.getElementById("hosgeldin").textContent = "Hoş geldin, " + profil.display_name;
+    // Profil bilgisini çek (hatayı yakalamak için limit(1) kullanıyoruz)
+    const { data: profilListesi, error: profilHata } = await client.from("profiles").select("display_name, rol").eq("auth_id", session.user.id).limit(1);
     
-    // 2. EĞER KİŞİ ADMIN İSE butonu göster
-    if (profil.rol === "admin") {
-      document.getElementById("kasaGecisPaneli").style.display = "block"; // Butonu göster
-      await kasaYukle('ortak'); // Varsayılan olarak ortak kasayı yükle
-    } else {
-      // 3. ADMIN DEĞİLSE (Hakan ise) kendi kişisel kasasını yükle
-      document.getElementById("kasaGecisPaneli").style.display = "none"; // Butonu gizli tut
-      await kasaYukle('kisisel'); // Hakan için kendi kasasını yükle
+    // Eğer veritabanı hatası varsa ekrana yazdır
+    if (profilHata) { 
+      document.getElementById("hosgeldin").textContent = "Veritabanı Hatası: " + profilHata.message; 
+      return; 
     }
+
+    // Profil bulunduysa devam et
+    if (profilListesi && profilListesi.length > 0) {
+      const profil = profilListesi[0];
+      document.getElementById("hosgeldin").textContent = "Hoş geldin, " + profil.display_name;
+      
+      // Admin kontrolü
+      if (profil.rol === "admin") {
+        document.getElementById("kasaGecisPaneli").style.display = "block"; 
+        await kasaYukle('ortak'); 
+      } else {
+        document.getElementById("kasaGecisPaneli").style.display = "none"; 
+        await kasaYukle('kisisel'); 
+      }
+    } else {
+      document.getElementById("hosgeldin").textContent = "Profil bulunamadı!";
+    }
+  } catch (e) {
+    document.getElementById("hosgeldin").textContent = "Kod Hatası: " + e.message;
+  }
+}
 
 async function cikisYap() {
   await client.auth.signOut();
