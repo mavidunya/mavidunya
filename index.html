@@ -44,7 +44,9 @@ p{font-size:1.05em;opacity:0.95}
 <body>
 
 <div class="card">
-    <div id="kasaSecimAlani" style="display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin-bottom: 15px;"></div>
+    <div style="text-align: center; margin-bottom: 20px;">
+    <button onclick="kasaYukle('ortak')" style="background: #f59e0b; color: white; padding: 10px 20px; border: none; border-radius: 8px; font-size: 1em; font-weight: bold; cursor: pointer;">💰 Ortak Kasayı Aç</button>
+</div>
 <h1>🌊 Mavidunya</h1>
 <div class="user-row">
 <span class="dot" id="userDot"></span>
@@ -137,36 +139,38 @@ async function cikisYap() {
   window.location.href = "login.html";
 }
 
-function hataGoster(m) {
-  const el = document.getElementById("debug");
-  el.style.display = "block";
-  el.textContent = "DEBUG: " + m;
+function kasaYukle(tip) {
+  // Şimdilik sadece test edelim
+  alert("Buton Çalıştı! " + tip + " kasası seçildi.");
 }
-async function kasaSecimleriniYukle() {
-  const { data: kasalar, error } = await client.from("kasalar").select("*");
+
+// Eski kontrol fonksiyonunu da biraz güncelleyelim
+async function kontrol() {
+  const { data: { session } } = await client.auth.getSession();
+  if (!session) { window.location.href = "login.html"; return; }
+  mevcutKullanici = session.user.id;
+
+  // Kullanıcı profili
+  const { data: profil } = await client.from("profiles").select("*").eq("auth_id", session.user.id).single();
+  if (profil) {
+    document.getElementById("hosgeldin").textContent = "Hoş geldin, " + profil.display_name;
+  }
   
-  if (error) { console.log("Kasalar yüklenemedi:", error); return; }
-  if (!kasalar) return;
-
-  const alan = document.getElementById("kasaSecimAlani");
-  alan.innerHTML = ""; 
-
-  kasalar.forEach(kasa => {
-    const btn = document.createElement("button");
-    btn.textContent = kasa.kasa_adi;
+  // Şimdilik eski ayarları yükleyelim (Ortak Kasa verisi)
+  const { data: ayar } = await client.from("ayarlar").select("*").limit(1).single();
+  if (ayar) {
+    document.getElementById("hedefRakam").textContent = tlFormat(ayar.hedef || 0);
+    document.getElementById("anaKasa").textContent = tlFormat(ayar.ana_kasa || 0);
+    document.getElementById("yedekKasa").textContent = tlFormat(ayar.yedek_kasa || 0);
+    document.getElementById("aktifRolling").textContent = tlFormat(ayar.aktif_rolling || 0);
+    document.getElementById("kilitliKar").textContent = tlFormat(ayar.kilitli_kar || 0);
     
-    const renk = kasa.kasa_tipi === "ortak" ? "#f59e0b" : "#3b82f6";
-    btn.style.cssText = `padding: 10px 20px; border-radius: 8px; border: none; background: ${renk}; color: white; font-weight: bold; cursor: pointer;`;
-    
-    btn.onclick = () => {
-      alert(kasa.kasa_adi + " seçildi!");
-    };
-    
-    alan.appendChild(btn);
-  });
+    const toplam = (ayar.ana_kasa || 0) + (ayar.yedek_kasa || 0) + (ayar.aktif_rolling || 0) + (ayar.kilitli_kar || 0);
+    const yuzde = ayar.hedef > 0 ? Math.min(100, (toplam / ayar.hedef) * 100) : 0;
+    document.getElementById("ilerlemeBar").style.width = yuzde + "%";
+    document.getElementById("yuzde").textContent = "%" + yuzde.toFixed(2) + " tamamlandı";
+  }
 }
-
-kasaSecimleriniYukle();
 kontrol();
 </script>
 </body>
