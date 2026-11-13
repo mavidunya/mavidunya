@@ -42,6 +42,7 @@ p{font-size:1.05em;opacity:0.95}
 </style>
 </head>
 <body>
+  <div id="kasaSecimAlani" style="display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin-bottom: 15px;"></div>
 <div class="card">
 <h1>🌊 Mavidunya</h1>
 <div class="user-row">
@@ -140,7 +141,31 @@ function hataGoster(m) {
   el.style.display = "block";
   el.textContent = "DEBUG: " + m;
 }
+async function kasaSecimleriniYukle() {
+  const { data: kasalar, error } = await client.from("kasalar").select("*");
+  
+  if (error) { console.log("Kasalar yüklenemedi:", error); return; }
+  if (!kasalar) return;
 
+  const alan = document.getElementById("kasaSecimAlani");
+  alan.innerHTML = ""; 
+
+  kasalar.forEach(kasa => {
+    const btn = document.createElement("button");
+    btn.textContent = kasa.kasa_adi;
+    
+    const renk = kasa.kasa_tipi === "ortak" ? "#f59e0b" : "#3b82f6";
+    btn.style.cssText = `padding: 10px 20px; border-radius: 8px; border: none; background: ${renk}; color: white; font-weight: bold; cursor: pointer;`;
+    
+    btn.onclick = () => {
+      alert(kasa.kasa_adi + " seçildi!");
+    };
+    
+    alan.appendChild(btn);
+  });
+}
+
+kasaSecimleriniYukle();
 kontrol();
 </script>
 </body>
