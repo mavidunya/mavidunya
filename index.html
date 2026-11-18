@@ -116,13 +116,27 @@ async function kontrol() {
       document.getElementById("hosgeldin").textContent = "Hoş geldin, " + profil.display_name;
       
       // Admin kontrolü
-    if (profil.rol === "admin") {
+        if (profil.rol === "admin") {
+      // Adminse butonu göster ve tüm kasaları yükle
       document.getElementById("kasaGecisPaneli").style.display = "block";
       await kasaMenuDoldur();
       await kasaYukle('ortak');
     } else {
+      // Admin değilse butonu gizle ve sadece kendi kasasını yükle
       document.getElementById("kasaGecisPaneli").style.display = "none";
-      await kasaYukle('kisisel');
+      
+      // Kişinin kendi kasa_id'sini bul
+      const { data: kasaProfil } = await client.from("profiles").select("kasa_id").eq("auth_id", session.user.id).limit(1).single();
+      
+      if (kasaProfil && kasaProfil.kasa_id) {
+          // Eğer bir kasa_id atanmışsa o kasayı yükle
+          await kasaYukle(kasaProfil.kasa_id, profil.display_name);
+      } else {
+          // Eğer kasa_id atanmamışsa hata mesajı göster
+          document.getElementById("hosgeldin").textContent = "Henüz bir kasanız yok. Lütfen yönetici ile iletişime geçin.";
+          document.getElementById("hedefRakam").textContent = "0 TL";
+          document.getElementById("toplamVarlik").textContent = "0 TL";
+      }
     }
     } else {
       document.getElementById("hosgeldin").textContent = "Profil bulunamadı!";
