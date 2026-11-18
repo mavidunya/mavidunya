@@ -11,7 +11,6 @@ h1{font-size:2em;margin-bottom:10px;text-align:center}
 p{font-size:1.05em;opacity:0.95}
 .user-row{display:flex;align-items:center;justify-content:center;gap:12px;margin:15px 0}
 .dot{width:18px;height:18px;border-radius:50%;display:inline-block;border:3px solid #fff;background:#888}
-.dot.blue{background:#3b82f6;box-shadow:0 0 10px rgba(255,255,255,0.8),0 0 0 2px rgba(255,255,255,0.4)}
 .badge{display:inline-block;background:#4ade80;color:#064e3b;padding:5px 15px;border-radius:20px;font-weight:bold;font-size:0.85em}
 .hedef{text-align:center;margin:20px 0 10px 0;font-size:1.15em}
 .hedef .rakam{font-size:1.6em;font-weight:bold;color:#4ade80;display:block;margin-top:5px}
@@ -45,44 +44,46 @@ p{font-size:1.05em;opacity:0.95}
 
 <div class="card">
     <!-- KASA SEÇİM BUTONU (Sağ Üst Köşe) -->
-<div id="kasaGecisPaneli" style="display: none; position: absolute; top: 20px; right: 20px; z-index: 100;">
-    <button onclick="menuAcKapa()" style="background: #f59e0b; color: white; padding: 8px 15px; border: none; border-radius: 8px; font-size: 0.85em; font-weight: bold; cursor: pointer;">
-        💰 <span id="aktifKasaAdi">Ortak Kasa</span> ▼
-    </button>
-    <div id="kasaMenuListesi" style="display: none; position: absolute; top: 100%; right: 0; background: #111827; border: 1px solid #f59e0b; border-radius: 8px; width: 180px; z-index: 9999; margin-top: 8px; box-shadow: 0 10px 15px rgba(0,0,0,0.5);">
-        <!-- Seçenekler buraya JavaScript ile gelecek -->
+    <div id="kasaGecisPaneli" style="display: none; position: absolute; top: 20px; right: 20px; z-index: 100;">
+        <button onclick="menuAcKapa()" style="background: #f59e0b; color: white; padding: 8px 15px; border: none; border-radius: 8px; font-size: 0.85em; font-weight: bold; cursor: pointer;">
+            💰 <span id="aktifKasaAdi">Ortak Kasa</span> ▼
+        </button>
+        <div id="kasaMenuListesi" style="display: none; position: absolute; top: 100%; right: 0; background: #111827; border: 1px solid #f59e0b; border-radius: 8px; width: 180px; z-index: 9999; margin-top: 8px; box-shadow: 0 10px 15px rgba(0,0,0,0.5);">
+            <!-- Seçenekler buraya JavaScript ile gelecek -->
+        </div>
     </div>
-</div>
-<h1>🌊 Mavidunya</h1>
-<div class="user-row">
-<span class="dot" id="userDot"></span>
-<p id="hosgeldin" style="margin:0">Yükleniyor...</p>
-</div>
-<div style="text-align:center"><span class="badge">✅ Sistem çalışıyor</span></div>
 
-<div class="hedef">
-🎯 Hedef Kazanç
-<span class="rakam" id="hedefRakam">0 TL</span>
-</div>
+    <h1>🌊 Mavidunya</h1>
+    <div class="user-row">
+        <span class="dot" id="userDot"></span>
+        <p id="hosgeldin" style="margin:0">Yükleniyor...</p>
+    </div>
+    <div style="text-align:center"><span class="badge">✅ Sistem çalışıyor</span></div>
+
+    <div class="hedef">
+        🎯 Hedef Kazanç
+        <span class="rakam" id="hedefRakam">0 TL</span>
+    </div>
+    
     <div class="hedef" style="margin-top: 5px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 10px;">
-    🏦 Toplam Varlık
-    <span class="rakam" id="toplamVarlik" style="color:#4ade80;">0 TL</span>
-</div>
-<div class="ilerleme"><div class="ilerleme-bar" id="ilerlemeBar"></div></div>
-<div class="yuzde" id="yuzde">%0 tamamlandı</div>
+        🏦 Toplam Varlık
+        <span class="rakam" id="toplamVarlik" style="color:#4ade80;">0 TL</span>
+    </div>
 
+    <div class="ilerleme"><div class="ilerleme-bar" id="ilerlemeBar"></div></div>
+    <div class="yuzde" id="yuzde">%0 tamamlandı</div>
 
-<div id="debug" class="hata"></div>
+    <div id="debug" class="hata"></div>
 
-<div class="butonlar">
-<button class="btn-bulten" onclick="window.location.href='bulten.html'">🌍 Bülten</button>
-<button class="btn-kombine" onclick="window.location.href='kombine.html'">🎯 Kombine</button>
-<button class="btn-tahmin" onclick="window.location.href='tahmin.html'">🤖 Tahmin</button>
-<button class="btn-kasa" onclick="window.location.href='kasa.html'">💰 Kasa</button>
-<button class="btn-istatistik" onclick="window.location.href='istatistik.html'">📊 İstatistik</button>
-<button class="btn-ayar" onclick="window.location.href='ayarlar.html'">⚙️ Ayarlar</button>
-<button class="btn-cikis" onclick="cikisYap()">🚪 Çıkış</button>
-</div>
+    <div class="butonlar">
+        <button class="btn-bulten" onclick="window.location.href='bulten.html'">🌍 Bülten</button>
+        <button class="btn-kombine" onclick="window.location.href='kombine.html'">🎯 Kombine</button>
+        <button class="btn-tahmin" onclick="window.location.href='tahmin.html'">🤖 Tahmin</button>
+        <button class="btn-kasa" onclick="window.location.href='kasa.html'">💰 Kasa</button>
+        <button class="btn-istatistik" onclick="window.location.href='istatistik.html'">📊 İstatistik</button>
+        <button class="btn-ayar" onclick="window.location.href='ayarlar.html'">⚙️ Ayarlar</button>
+        <button class="btn-cikis" onclick="cikisYap()">🚪 Çıkış</button>
+    </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -91,8 +92,15 @@ const SUPABASE_URL = "https://bwdoiltmkrqfxqknedih.supabase.co";
 const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ3ZG9pbHRta3JxZnhxa25lZGloIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA0NTkzNjcsImV4cCI6MjEwNjAzNTM2N30.mx1O66LItD6Q6ED1Z75YzGXW7ijSDUVAl9R2df4Km8o";
 const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
+let mevcutKullanici = null;
+
 function tlFormat(n) {
   return new Intl.NumberFormat('tr-TR', {maximumFractionDigits: 0}).format(n) + " TL";
+}
+
+function menuAcKapa() {
+  const menu = document.getElementById("kasaMenuListesi");
+  menu.style.display = menu.style.display === "none" ? "block" : "none";
 }
 
 async function kontrol() {
@@ -101,39 +109,94 @@ async function kontrol() {
     if (!session) { window.location.href = "login.html"; return; }
     mevcutKullanici = session.user.id;
 
-    // Profil bilgisini çek (hatayı yakalamak için limit(1) kullanıyoruz)
-    const { data: profilListesi, error: profilHata } = await client.from("profiles").select("display_name, rol").eq("auth_id", session.user.id).limit(1);
+    const { data: profilListesi, error: profilHata } = await client.from("profiles").select("display_name, rol, kasa_id").eq("auth_id", session.user.id).limit(1);
     
-    // Eğer veritabanı hatası varsa ekrana yazdır
-    if (profilHata) { 
-      document.getElementById("hosgeldin").textContent = "Veritabanı Hatası: " + profilHata.message; 
+    if (profilHata || !profilListesi || profilListesi.length === 0) { 
+      document.getElementById("hosgeldin").textContent = "Profil bulunamadı!"; 
       return; 
     }
 
-    // Profil bulunduysa devam et
-    if (profilListesi && profilListesi.length > 0) {
-      const profil = profilListesi[0];
-      document.getElementById("hosgeldin").textContent = "Hoş geldin, " + profil.display_name;
-      
-      // Admin kontrolü
-         if (profil.rol === "admin") {
+    const profil = profilListesi[0];
+    document.getElementById("hosgeldin").textContent = "Hoş geldin, " + (profil.display_name || "Kullanıcı");
+    
+    // ADMIN MANTIĞI
+    if (profil.rol === "admin") {
       document.getElementById("kasaGecisPaneli").style.display = "block";
       await kasaMenuDoldur();
       
-      // Menüden "Ortak" kelimesini içeren kasayı bul ve onun ID'sini yükle
-                  const { data: ortakKasa } = await client.from("kasalar").select("id, kasa_adi").eq("kasa_tipi", "ortak").limit(1).single();
-                  if (ortakKasa) {
+      const { data: ortakKasa } = await client.from("kasalar").select("id, kasa_adi").eq("kasa_tipi", "ortak").limit(1).single();
+      
+      if (ortakKasa) {
           document.getElementById("aktifKasaAdi").textContent = ortakKasa.kasa_adi;
-          await kasaYukle(ortakKasa.id); // Doğrudan ID'sini gönderiyoruz
+          await kasaYukle(ortakKasa.id); 
       } else {
           document.getElementById("hosgeldin").textContent = "Ortak Kasa bulunamadı!";
       }
-    }
+      
+    // ÜYE MANTIĞI
     } else {
-      document.getElementById("hosgeldin").textContent = "Profil bulunamadı!";
+      document.getElementById("kasaGecisPaneli").style.display = "none";
+      
+      const { data: ayar } = await client.from("ayarlar").select("*").eq("kasa_id", profil.kasa_id).limit(1).single();
+      
+      if (ayar) {
+          document.getElementById("hedefRakam").textContent = tlFormat(ayar.hedef || 0);
+          const toplam = (ayar.ana_kasa || 0) + (ayar.yedek_kasa || 0) + (ayar.aktif_rolling || 0) + (ayar.kilitli_kar || 0);
+          document.getElementById("toplamVarlik").textContent = tlFormat(toplam);
+          const yuzde = ayar.hedef > 0 ? Math.min(100, (toplam / ayar.hedef) * 100) : 0;
+          document.getElementById("ilerlemeBar").style.width = yuzde + "%";
+          document.getElementById("yuzde").textContent = "%" + yuzde.toFixed(2) + " tamamlandı";
+      } else {
+          document.getElementById("hedefRakam").textContent = "0 TL";
+          document.getElementById("toplamVarlik").textContent = "0 TL";
+      }
     }
   } catch (e) {
     document.getElementById("hosgeldin").textContent = "Kod Hatası: " + e.message;
+  }
+}
+
+async function kasaMenuDoldur() {
+  const { data: kasalar } = await client.from("kasalar").select("*");
+  if (!kasalar) return;
+  
+  const menu = document.getElementById("kasaMenuListesi");
+  menu.innerHTML = ""; 
+
+  kasalar.forEach(kasa => {
+    const secenek = document.createElement("div");
+    secenek.textContent = kasa.kasa_adi;
+    secenek.style.cssText = "padding: 12px; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.1); font-weight: bold; color: white; text-align: left;";
+    
+    secenek.onmouseover = () => secenek.style.background = "rgba(255,255,255,0.1)";
+    secenek.onmouseout = () => secenek.style.background = "transparent";
+    
+    secenek.onclick = () => {
+        document.getElementById("aktifKasaAdi").textContent = kasa.kasa_adi;
+        kasaYukle(kasa.id); 
+    };
+    menu.appendChild(secenek);
+  });
+}
+
+async function kasaYukle(kasaId) {
+  document.getElementById("kasaMenuListesi").style.display = "none";
+  
+  const { data: ayar } = await client.from("ayarlar").select("*").eq("kasa_id", kasaId).limit(1).single();
+  
+  if (ayar) {
+    document.getElementById("hedefRakam").textContent = tlFormat(ayar.hedef || 0);
+    const toplam = (ayar.ana_kasa || 0) + (ayar.yedek_kasa || 0) + (ayar.aktif_rolling || 0) + (ayar.kilitli_kar || 0);
+    document.getElementById("toplamVarlik").textContent = tlFormat(toplam);
+    
+    const yuzde = ayar.hedef > 0 ? Math.min(100, (toplam / ayar.hedef) * 100) : 0;
+    document.getElementById("ilerlemeBar").style.width = yuzde + "%";
+    document.getElementById("yuzde").textContent = "%" + yuzde.toFixed(2) + " tamamlandı";
+  } else {
+    document.getElementById("hedefRakam").textContent = "0 TL";
+    document.getElementById("toplamVarlik").textContent = "0 TL";
+    document.getElementById("ilerlemeBar").style.width = "0%";
+    document.getElementById("yuzde").textContent = "%0 tamamlandı";
   }
 }
 
@@ -141,85 +204,7 @@ async function cikisYap() {
   await client.auth.signOut();
   window.location.href = "login.html";
 }
-// Menüyü Aç/Kapa
-function menuAcKapa() {
-  const menu = document.getElementById("kasaMenuListesi");
-  menu.style.display = menu.style.display === "none" ? "block" : "none";
-}
 
-// Kasaları Veritabanından Çek ve Menüye Ekle
-async function kasaMenuDoldur() {
-  const { data: kasalar, error } = await client.from("kasalar").select("*");
-  if (error || !kasalar) return;
-  
-  const menu = document.getElementById("kasaMenuListesi");
-  menu.innerHTML = ""; // İçini temizle
-
-  kasalar.forEach(kasa => {
-    const secenek = document.createElement("div");
-    secenek.textContent = kasa.kasa_adi;
-    secenek.style.cssText = "padding: 12px; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.1); font-weight: bold; color: white; text-align: left;";
-    
-    // Üzerine gelince renk değişsin
-    secenek.onmouseover = () => secenek.style.background = "rgba(255,255,255,0.1)";
-    secenek.onmouseout = () => secenek.style.background = "transparent";
-    
-    // Tıklandığında o kasayı yükle ve buton adını değiştir
-    secenek.onclick = () => {
-        document.getElementById("aktifKasaAdi").textContent = kasa.kasa_adi;
-        kasaYukle(kasa.kasa_adi); 
-    };
-    
-    menu.appendChild(secenek);
-  });
-}
-async function kasaYukle(kasaIdVeyaAdi, kullaniciAdi = null) {
-  document.getElementById("kasaMenuListesi").style.display = "none";
-  document.getElementById("hosgeldin").textContent = "Kasa yükleniyor...";
-
-  let ayar = null;
-
-  // Eğer gelen veri bir UUID (benzersiz ID) ise kasa_id'ye göre ara
-  // (Basit bir kontrol: içinde tire varsa ID'dir)
-  if (kasaIdVeyaAdi.includes('-')) {
-      const { data } = await client.from("ayarlar").select("*").eq("kasa_id", kasaIdVeyaAdi).limit(1).single();
-      ayar = data;
-  } else {
-      // Değilse (Admin menüden seçtiyse) isme göre bul
-      const { data: kasaData } = await client.from("kasalar").select("id").eq("kasa_adi", kasaIdVeyaAdi).limit(1).single();
-      if (kasaData) {
-          const { data } = await client.from("ayarlar").select("*").eq("kasa_id", kasaData.id).limit(1).single();
-          ayar = data;
-      }
-  }
-  
-  if (!ayar) {
-    // Kasa ayarları yoksa varsayılan 0 değerlerini göster
-    document.getElementById("hedefRakam").textContent = tlFormat(0);
-    document.getElementById("toplamVarlik").textContent = tlFormat(0);
-    document.getElementById("ilerlemeBar").style.width = "0%";
-    document.getElementById("yuzde").textContent = "%0 tamamlandı";
-  } else {
-    // Verileri ekrana yazdır
-    document.getElementById("hedefRakam").textContent = tlFormat(ayar.hedef || 0);
-    
-    const toplam = (ayar.ana_kasa || 0) + (ayar.yedek_kasa || 0) + (ayar.aktif_rolling || 0) + (ayar.kilitli_kar || 0);
-    document.getElementById("toplamVarlik").textContent = tlFormat(toplam);
-    
-    const yuzde = ayar.hedef > 0 ? Math.min(100, (toplam / ayar.hedef) * 100) : 0;
-    document.getElementById("ilerlemeBar").style.width = yuzde + "%";
-    document.getElementById("yuzde").textContent = "%" + yuzde.toFixed(2) + " tamamlandı";
-  }
-
-  // Buton yazısını güncelle (Eğer admin menüden seçtiyse)
-  if (kullaniciAdi) {
-     document.getElementById("hosgeldin").textContent = "Hoş geldin, " + kullaniciAdi;
-  } else {
-     document.getElementById("aktifKasaAdi").textContent = kasaIdVeyaAdi;
-  }
-}
-
-// 
 kontrol();
 </script>
 </body>
