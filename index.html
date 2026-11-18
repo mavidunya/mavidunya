@@ -182,8 +182,50 @@ async function kasaMenuDoldur() {
     menu.appendChild(secenek);
   });
 }
-function kasaYukle(tip) {
-  // Şimdilik sadece test edelim
+async function kasaYukle(kasaIdVeyaAdi, kullaniciAdi = null) {
+  document.getElementById("kasaMenuListesi").style.display = "none";
+  document.getElementById("hosgeldin").textContent = "Kasa yükleniyor...";
+
+  let ayar = null;
+
+  // Eğer gelen veri bir UUID (benzersiz ID) ise kasa_id'ye göre ara
+  // (Basit bir kontrol: içinde tire varsa ID'dir)
+  if (kasaIdVeyaAdi.includes('-')) {
+      const { data } = await client.from("ayarlar").select("*").eq("kasa_id", kasaIdVeyaAdi).limit(1).single();
+      ayar = data;
+  } else {
+      // Değilse (Admin menüden seçtiyse) isme göre bul
+      const { data: kasaData } = await client.from("kasalar").select("id").eq("kasa_adi", kasaIdVeyaAdi).limit(1).single();
+      if (kasaData) {
+          const { data } = await client.from("ayarlar").select("*").eq("kasa_id", kasaData.id).limit(1).single();
+          ayar = data;
+      }
+  }
+  
+  if (!ayar) {
+    // Kasa ayarları yoksa varsayılan 0 değerlerini göster
+    document.getElementById("hedefRakam").textContent = tlFormat(0);
+    document.getElementById("toplamVarlik").textContent = tlFormat(0);
+    document.getElementById("ilerlemeBar").style.width = "0%";
+    document.getElementById("yuzde").textContent = "%0 tamamlandı";
+  } else {
+    // Verileri ekrana yazdır
+    document.getElementById("hedefRakam").textContent = tlFormat(ayar.hedef || 0);
+    
+    const toplam = (ayar.ana_kasa || 0) + (ayar.yedek_kasa || 0) + (ayar.aktif_rolling || 0) + (ayar.kilitli_kar || 0);
+    document.getElementById("toplamVarlik").textContent = tlFormat(toplam);
+    
+    const yuzde = ayar.hedef > 0 ? Math.min(100, (toplam / ayar.hedef) * 100) : 0;
+    document.getElementById("ilerlemeBar").style.width = yuzde + "%";
+    document.getElementById("yuzde").textContent = "%" + yuzde.toFixed(2) + " tamamlandı";
+  }
+
+  // Buton yazısını güncelle (Eğer admin menüden seçtiyse)
+  if (kullaniciAdi) {
+     document.getElementById("hosgeldin").textContent = "Hoş geldin, " + kullaniciAdi;
+  } else {
+     document.getElementById("aktifKasaAdi").textContent = kasaIdVeyaAdi;
+  }
 }
 
 // 
