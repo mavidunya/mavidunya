@@ -6,21 +6,18 @@
 <title>Mavidunya</title>
 <style>
 body{font-family:Arial,sans-serif;background:linear-gradient(135deg,#1e3c72,#2a5298);color:#fff;display:flex;justify-content:center;align-items:center;min-height:100vh;margin:0;padding:20px}
-.card{background:rgba(255,255,255,0.1);padding:30px;border-radius:20px;max-width:550px;width:100%}
+.card{background:rgba(255,255,255,0.1);padding:30px;border-radius:20px;max-width:550px;width:100%;position:relative}
 h1{font-size:2em;margin-bottom:10px;text-align:center}
 p{font-size:1.05em;opacity:0.95}
 .user-row{display:flex;align-items:center;justify-content:center;gap:12px;margin:15px 0}
 .dot{width:18px;height:18px;border-radius:50%;display:inline-block;border:3px solid #fff;background:#888}
+.dot.blue{background:#3b82f6;box-shadow:0 0 10px rgba(255,255,255,0.8),0 0 0 2px rgba(255,255,255,0.4)}
 .badge{display:inline-block;background:#4ade80;color:#064e3b;padding:5px 15px;border-radius:20px;font-weight:bold;font-size:0.85em}
 .hedef{text-align:center;margin:20px 0 10px 0;font-size:1.15em}
 .hedef .rakam{font-size:1.6em;font-weight:bold;color:#4ade80;display:block;margin-top:5px}
 .ilerleme{width:100%;height:20px;background:rgba(255,255,255,0.15);border-radius:10px;overflow:hidden;margin:10px 0 5px 0}
 .ilerleme-bar{height:100%;background:linear-gradient(90deg,#4ade80,#22c55e);border-radius:10px;transition:width 0.5s;width:0%}
 .yuzde{text-align:center;font-size:0.9em;opacity:0.85;margin-bottom:15px}
-.kasa-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:20px 0}
-.kasa-kutu{background:rgba(255,255,255,0.08);padding:15px;border-radius:12px;text-align:center}
-.kasa-kutu .baslik{font-size:0.85em;opacity:0.8;margin-bottom:5px}
-.kasa-kutu .tutar{font-size:1.2em;font-weight:bold}
 .butonlar{display:flex;flex-wrap:wrap;gap:8px;margin-top:20px}
 .butonlar button{flex:1;min-width:calc(50% - 4px);padding:12px;border-radius:10px;border:none;font-weight:bold;font-size:0.95em;cursor:pointer}
 .btn-kasa{background:#3b82f6;color:#fff}
@@ -43,13 +40,11 @@ p{font-size:1.05em;opacity:0.95}
 <body>
 
 <div class="card">
-    <!-- KASA SEÇİM BUTONU (Sağ Üst Köşe) -->
     <div id="kasaGecisPaneli" style="display: none; position: absolute; top: 20px; right: 20px; z-index: 100;">
         <button onclick="menuAcKapa()" style="background: #f59e0b; color: white; padding: 8px 15px; border: none; border-radius: 8px; font-size: 0.85em; font-weight: bold; cursor: pointer;">
             💰 <span id="aktifKasaAdi">Ortak Kasa</span> ▼
         </button>
         <div id="kasaMenuListesi" style="display: none; position: absolute; top: 100%; right: 0; background: #111827; border: 1px solid #f59e0b; border-radius: 8px; width: 180px; z-index: 9999; margin-top: 8px; box-shadow: 0 10px 15px rgba(0,0,0,0.5);">
-            <!-- Seçenekler buraya JavaScript ile gelecek -->
         </div>
     </div>
 
@@ -119,26 +114,36 @@ async function kontrol() {
     const profil = profilListesi[0];
     document.getElementById("hosgeldin").textContent = "Hoş geldin, " + (profil.display_name || "Kullanıcı");
     
-    // ADMIN MANTIĞI
     if (profil.rol === "admin") {
-      document.getElementById("kasaGecisPaneli").style.display = "block";
-      await kasaMenuDoldur();
+      document.getElementById("kasaGecisPaneli").style.display = "block"; 
+      
+      const { data: kasalar } = await client.from("kasalar").select("*");
+      const menu = document.getElementById("kasaMenuListesi");
+      menu.innerHTML = "";
+      
+      if (kasalar) {
+          kasalar.forEach(kasa => {
+            const secenek = document.createElement("div");
+            secenek.textContent = kasa.kasa_adi;
+            secenek.style.cssText = "padding: 12px; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.1); font-weight: bold; color: white; text-align: left;";
+            secenek.onclick = () => {
+                document.getElementById("aktifKasaAdi").textContent = kasa.kasa_adi;
+                kasaYukle(kasa.id); 
+                menuAcKapa();
+            };
+            menu.appendChild(secenek);
+          });
+      }
       
       const { data: ortakKasa } = await client.from("kasalar").select("id, kasa_adi").eq("kasa_tipi", "ortak").limit(1).single();
-      
       if (ortakKasa) {
           document.getElementById("aktifKasaAdi").textContent = ortakKasa.kasa_adi;
           await kasaYukle(ortakKasa.id); 
-      } else {
-          document.getElementById("hosgeldin").textContent = "Ortak Kasa bulunamadı!";
       }
-      
-    // ÜYE MANTIĞI
     } else {
-      document.getElementById("kasaGecisPaneli").style.display = "none";
+      document.getElementById("kasaGecisPaneli").style.display = "none"; 
       
       const { data: ayar } = await client.from("ayarlar").select("*").eq("kasa_id", profil.kasa_id).limit(1).single();
-      
       if (ayar) {
           document.getElementById("hedefRakam").textContent = tlFormat(ayar.hedef || 0);
           const toplam = (ayar.ana_kasa || 0) + (ayar.yedek_kasa || 0) + (ayar.aktif_rolling || 0) + (ayar.kilitli_kar || 0);
@@ -146,9 +151,6 @@ async function kontrol() {
           const yuzde = ayar.hedef > 0 ? Math.min(100, (toplam / ayar.hedef) * 100) : 0;
           document.getElementById("ilerlemeBar").style.width = yuzde + "%";
           document.getElementById("yuzde").textContent = "%" + yuzde.toFixed(2) + " tamamlandı";
-      } else {
-          document.getElementById("hedefRakam").textContent = "0 TL";
-          document.getElementById("toplamVarlik").textContent = "0 TL";
       }
     }
   } catch (e) {
@@ -156,34 +158,8 @@ async function kontrol() {
   }
 }
 
-async function kasaMenuDoldur() {
-  const { data: kasalar } = await client.from("kasalar").select("*");
-  if (!kasalar) return;
-  
-  const menu = document.getElementById("kasaMenuListesi");
-  menu.innerHTML = ""; 
-
-  kasalar.forEach(kasa => {
-    const secenek = document.createElement("div");
-    secenek.textContent = kasa.kasa_adi;
-    secenek.style.cssText = "padding: 12px; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.1); font-weight: bold; color: white; text-align: left;";
-    
-    secenek.onmouseover = () => secenek.style.background = "rgba(255,255,255,0.1)";
-    secenek.onmouseout = () => secenek.style.background = "transparent";
-    
-    secenek.onclick = () => {
-        document.getElementById("aktifKasaAdi").textContent = kasa.kasa_adi;
-        kasaYukle(kasa.id); 
-    };
-    menu.appendChild(secenek);
-  });
-}
-
 async function kasaYukle(kasaId) {
-  document.getElementById("kasaMenuListesi").style.display = "none";
-  
   const { data: ayar } = await client.from("ayarlar").select("*").eq("kasa_id", kasaId).limit(1).single();
-  
   if (ayar) {
     document.getElementById("hedefRakam").textContent = tlFormat(ayar.hedef || 0);
     const toplam = (ayar.ana_kasa || 0) + (ayar.yedek_kasa || 0) + (ayar.aktif_rolling || 0) + (ayar.kilitli_kar || 0);
