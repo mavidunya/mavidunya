@@ -121,7 +121,7 @@ async function kontrol() {
       const menu = document.getElementById("kasaMenuListesi");
       menu.innerHTML = "";
       
-      if (kasalar) {
+      if (kasalar && kasalar.length > 0) {
           kasalar.forEach(kasa => {
             const secenek = document.createElement("div");
             secenek.textContent = kasa.kasa_adi;
@@ -133,17 +133,20 @@ async function kontrol() {
             };
             menu.appendChild(secenek);
           });
+
+          let hedefKasa = kasalar.find(k => k.kasa_tipi === "ortak") || kasalar[0];
+          document.getElementById("aktifKasaAdi").textContent = hedefKasa.kasa_adi;
+          await kasaYukle(hedefKasa.id);
+      } else {
+          document.getElementById("aktifKasaAdi").textContent = "Kasa Bulunamadı";
+          document.getElementById("debug").style.display = "block";
+          document.getElementById("debug").textContent = "Veritabanında hiç kasa tanımlanmamış.";
       }
-      
-      const { data: ortakKasa } = await client.from("kasalar").select("id, kasa_adi").eq("kasa_tipi", "ortak").limit(1).single();
-      if (ortakKasa) {
-          document.getElementById("aktifKasaAdi").textContent = ortakKasa.kasa_adi;
-          await kasaYukle(ortakKasa.id); 
-      }
+
     } else {
       document.getElementById("kasaGecisPaneli").style.display = "none"; 
       
-      const { data: ayar } = await client.from("ayarlar").select("*").eq("kasa_id", profil.kasa_id).limit(1).single();
+      const { data: ayar } = await client.from("ayarlar").select("*").eq("kasa_id", profil.kasa_id).maybeSingle();
       if (ayar) {
           document.getElementById("hedefRakam").textContent = tlFormat(ayar.hedef || 0);
           const toplam = (ayar.ana_kasa || 0) + (ayar.yedek_kasa || 0) + (ayar.aktif_rolling || 0) + (ayar.kilitli_kar || 0);
@@ -154,12 +157,13 @@ async function kontrol() {
       }
     }
   } catch (e) {
-    document.getElementById("hosgeldin").textContent = "Kod Hatası: " + e.message;
+    document.getElementById("debug").style.display = "block";
+    document.getElementById("debug").textContent = "Kod Hatası: " + e.message;
   }
 }
 
 async function kasaYukle(kasaId) {
-  const { data: ayar } = await client.from("ayarlar").select("*").eq("kasa_id", kasaId).limit(1).single();
+  const { data: ayar } = await client.from("ayarlar").select("*").eq("kasa_id", kasaId).maybeSingle();
   if (ayar) {
     document.getElementById("hedefRakam").textContent = tlFormat(ayar.hedef || 0);
     const toplam = (ayar.ana_kasa || 0) + (ayar.yedek_kasa || 0) + (ayar.aktif_rolling || 0) + (ayar.kilitli_kar || 0);
