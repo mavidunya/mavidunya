@@ -122,7 +122,7 @@ async function kontrol() {
       
       // Menüden "Ortak" kelimesini içeren kasayı bul ve onun ID'sini yükle
                   const { data: ortakKasa } = await client.from("kasalar").select("id, kasa_adi").eq("kasa_tipi", "ortak").limit(1).single();
-             (ortakKasa) {
+                  if (ortakKasa) {
           document.getElementById("aktifKasaAdi").textContent = ortakKasa.kasa_adi;
           await kasaYukle(ortakKasa.id); // Doğrudan ID'sini gönderiyoruz
       } else {
