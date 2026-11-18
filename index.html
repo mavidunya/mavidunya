@@ -116,26 +116,18 @@ async function kontrol() {
       document.getElementById("hosgeldin").textContent = "Hoş geldin, " + profil.display_name;
       
       // Admin kontrolü
-        if (profil.rol === "admin") {
-      // Adminse butonu göster ve tüm kasaları yükle
+         if (profil.rol === "admin") {
       document.getElementById("kasaGecisPaneli").style.display = "block";
       await kasaMenuDoldur();
-      await kasaYukle('ortak');
-    } else {
-      // Admin değilse butonu gizle ve sadece kendi kasasını yükle
-      document.getElementById("kasaGecisPaneli").style.display = "none";
       
-      // Kişinin kendi kasa_id'sini bul
-      const { data: kasaProfil } = await client.from("profiles").select("kasa_id").eq("auth_id", session.user.id).limit(1).single();
+      // Menüden "Ortak" kelimesini içeren kasayı bul ve onun ID'sini yükle
+      const { data: ortakKasa } = await client.from("kasalar").select("id, kasa_adi").like("kasa_adi", "%Ortak%").limit(1).single();
       
-      if (kasaProfil && kasaProfil.kasa_id) {
-          // Eğer bir kasa_id atanmışsa o kasayı yükle
-          await kasaYukle(kasaProfil.kasa_id, profil.display_name);
+      if (ortakKasa) {
+          document.getElementById("aktifKasaAdi").textContent = ortakKasa.kasa_adi;
+          await kasaYukle(ortakKasa.id); // Doğrudan ID'sini gönderiyoruz
       } else {
-          // Eğer kasa_id atanmamışsa hata mesajı göster
-          document.getElementById("hosgeldin").textContent = "Henüz bir kasanız yok. Lütfen yönetici ile iletişime geçin.";
-          document.getElementById("hedefRakam").textContent = "0 TL";
-          document.getElementById("toplamVarlik").textContent = "0 TL";
+          document.getElementById("hosgeldin").textContent = "Ortak Kasa bulunamadı!";
       }
     }
     } else {
