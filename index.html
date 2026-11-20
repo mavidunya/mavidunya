@@ -88,6 +88,7 @@ const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
 const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 let mevcutKullanici = null;
+let aktifKasaId = null;
 
 function tlFormat(n) {
   return new Intl.NumberFormat('tr-TR', {maximumFractionDigits: 0}).format(n) + " TL";
@@ -98,62 +99,96 @@ function menuAcKapa() {
   menu.style.display = menu.style.display === "none" ? "block" : "none";
 }
 
+function izlemeDurumuGuncelle(kasa) {
+  const debugEl = document.getElementById("debug");
+  if (!kasa) return;
+
+  // Ortak kasa veya kullanıcının kendi kasası dışında bir kasaya bakılıyorsa müdahale kapalı bilgisi ver
+  if (kasa.kasa_tipi !== "ortak") {
+    debugEl.style.display = "block";
+    debugEl.textContent = "👁️ İzleme Modu: '" + kasa.kasa_adi + "' kasası inceleniyor (müdahale kapalı).";
+  } else {
+    debugEl.style.display = "none";
+    debugEl.textContent = "";
+  }
+}
+
 async function kontrol() {
   try {
     const { data: { session } } = await client.auth.getSession();
     if (!session) { window.location.href = "login.html"; return; }
     mevcutKullanici = session.user.id;
 
-    const { data: profilListesi, error: profilHata } = await client.from("profiles").select("display_name, rol, kasa_id").eq("auth_id", session.user.id).limit(1);
-    
-    if (profilHata || !profilListesi || profilListesi.length === 0) { 
-      document.getElementById("hosgeldin").textContent = "Profil bulunamadı!"; 
-      return; 
+    const { data: profilListesi, error: profilHata } = await client
+      .from("profiles")
+      .select("*")
+      .eq("auth_id", session.user.id)
+      .limit(1);
+
+    if (profilHata || !profilListesi || profilListesi.length === 0) {
+      document.getElementById("hosgeldin").textContent = "Profil bulunamadı!";
+      return;
     }
 
     const profil = profilListesi[0];
-    document.getElementById("hosgeldin").textContent = "Hoş geldin, " + (profil.display_name || "Kullanıcı");
-    
-    if (profil.rol === "admin") {
-      document.getElementById("kasaGecisPaneli").style.display = "block"; 
-      
-      const { data: kasalar } = await client.from("kasalar").select("*");
-      const menu = document.getElementById("kasaMenuListesi");
-      menu.innerHTML = "";
-      
-      if (kasalar && kasalar.length > 0) {
-          kasalar.forEach(kasa => {
-            const secenek = document.createElement("div");
-            secenek.textContent = kasa.kasa_adi;
-            secenek.style.cssText = "padding: 12px; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.1); font-weight: bold; color: white; text-align: left;";
-            secenek.onclick = () => {
-                document.getElementById("aktifKasaAdi").textContent = kasa.kasa_adi;
-                kasaYukle(kasa.id); 
-                menuAcKapa();
-            };
-            menu.appendChild(secenek);
-          });
+    const ad = profil.display_name || profil.ekran_adi || "Kullanıcı";
+    document.getElementById("hosgeldin").textContent = "Hoş geldin, " + ad;
+    document.getElementById("userDot").classList.add("blue");
 
-          let hedefKasa = kasalar.find(k => k.kasa_tipi === "ortak") || kasalar[0];
-          document.getElementById("aktifKasaAdi").textContent = hedefKasa.kasa_adi;
-          await kasaYukle(hedefKasa.id);
-      } else {
-          document.getElementById("aktifKasaAdi").textContent = "Kasa Bulunamadı";
-          document.getElementById("debug").style.display = "block";
-          document.getElementById("debug").textContent = "Veritabanında hiç kasa tanımlanmamış.";
+    const yetkiliYonetici = profil.rol === "yönetici" || profil.rol === "admin";
+
+    if (yetkiliYonetici) {
+      document.getElementById("kasaGecisPaneli").style.display = "block";
+
+      const { data: kasalar, error: kasaHata } = await client.from("kasalar").select("*");
+      if (kasaHata) {
+        document.getElementById("debug").style.display = "block";
+        document.getElementById("debug").textContent = "Kasa okuma hatası: " + kasaHata.message;
+        return;
       }
 
+      const menu = document.getElementById("kasaMenuListesi");
+      menu.innerHTML = "";
+
+      if (kasalar && kasalar.length > 0) {
+        kasalar.forEach(kasa => {
+          const secenek = document.createElement("div");
+          secenek.textContent = kasa.kasa_adi;
+          secenek.style.cssText = "padding: 12px; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.1); font-weight: bold; color: white; text-align: left;";
+          secenek.onclick = async () => {
+            document.getElementById("aktifKasaAdi").textContent = kasa.kasa_adi;
+            aktifKasaId = kasa.id;
+            izlemeDurumuGuncelle(kasa);
+            await kasaYukle(kasa.id);
+            menuAcKapa();
+          };
+          menu.appendChild(secenek);
+        });
+
+        const ortakKasa = kasalar.find(k => k.kasa_tipi === "ortak") || kasalar[0];
+        document.getElementById("aktifKasaAdi").textContent = ortakKasa.kasa_adi;
+        aktifKasaId = ortakKasa.id;
+        izlemeDurumuGuncelle(ortakKasa);
+        await kasaYukle(ortakKasa.id);
+      } else {
+        document.getElementById("aktifKasaAdi").textContent = "Kasa Bulunamadı";
+        document.getElementById("debug").style.display = "block";
+        document.getElementById("debug").textContent = "Veritabanında hiç kasa tanımlanmamış.";
+      }
     } else {
-      document.getElementById("kasaGecisPaneli").style.display = "none"; 
-      
-      const { data: ayar } = await client.from("ayarlar").select("*").eq("kasa_id", profil.kasa_id).maybeSingle();
-      if (ayar) {
-          document.getElementById("hedefRakam").textContent = tlFormat(ayar.hedef || 0);
-          const toplam = (ayar.ana_kasa || 0) + (ayar.yedek_kasa || 0) + (ayar.aktif_rolling || 0) + (ayar.kilitli_kar || 0);
-          document.getElementById("toplamVarlik").textContent = tlFormat(toplam);
-          const yuzde = ayar.hedef > 0 ? Math.min(100, (toplam / ayar.hedef) * 100) : 0;
-          document.getElementById("ilerlemeBar").style.width = yuzde + "%";
-          document.getElementById("yuzde").textContent = "%" + yuzde.toFixed(2) + " tamamlandı";
+      document.getElementById("kasaGecisPaneli").style.display = "none";
+      aktifKasaId = profil.kasa_id;
+
+      if (profil.kasa_id) {
+        const { data: kasaBilgi } = await client
+          .from("kasalar")
+          .select("kasa_adi")
+          .eq("id", profil.kasa_id)
+          .maybeSingle();
+        if (kasaBilgi?.kasa_adi) {
+          document.getElementById("aktifKasaAdi").textContent = kasaBilgi.kasa_adi;
+        }
+        await kasaYukle(profil.kasa_id);
       }
     }
   } catch (e) {
@@ -163,12 +198,17 @@ async function kontrol() {
 }
 
 async function kasaYukle(kasaId) {
-  const { data: ayar } = await client.from("ayarlar").select("*").eq("kasa_id", kasaId).maybeSingle();
+  const { data: ayar } = await client
+    .from("ayarlar")
+    .select("*")
+    .eq("kasa_id", kasaId)
+    .maybeSingle();
+
   if (ayar) {
     document.getElementById("hedefRakam").textContent = tlFormat(ayar.hedef || 0);
     const toplam = (ayar.ana_kasa || 0) + (ayar.yedek_kasa || 0) + (ayar.aktif_rolling || 0) + (ayar.kilitli_kar || 0);
     document.getElementById("toplamVarlik").textContent = tlFormat(toplam);
-    
+
     const yuzde = ayar.hedef > 0 ? Math.min(100, (toplam / ayar.hedef) * 100) : 0;
     document.getElementById("ilerlemeBar").style.width = yuzde + "%";
     document.getElementById("yuzde").textContent = "%" + yuzde.toFixed(2) + " tamamlandı";
