@@ -74,7 +74,7 @@ p{font-size:1.05em;opacity:0.95}
         <button class="btn-bulten" onclick="window.location.href='bulten.html'">🌍 Bülten</button>
         <button class="btn-kombine" onclick="window.location.href='kombine.html'">🎯 Kombine</button>
         <button class="btn-tahmin" onclick="window.location.href='tahmin.html'">🤖 Tahmin</button>
-        <button class="btn-kasa" onclick="window.location.href='kasa.html'">💰 Kasa</button>
+        <button class="btn-kasa" onclick="kasayaGit()">💰 Kasa</button>
         <button class="btn-istatistik" onclick="window.location.href='istatistik.html'">📊 İstatistik</button>
         <button class="btn-ayar" onclick="window.location.href='ayarlar.html'">⚙️ Ayarlar</button>
         <button class="btn-cikis" onclick="cikisYap()">🚪 Çıkış</button>
@@ -89,6 +89,7 @@ const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 let mevcutKullanici = null;
 let aktifKasaId = null;
+let kendiKasaId = null;
 
 function tlFormat(n) {
   return new Intl.NumberFormat('tr-TR', {maximumFractionDigits: 0}).format(n) + " TL";
@@ -99,12 +100,31 @@ function menuAcKapa() {
   menu.style.display = menu.style.display === "none" ? "block" : "none";
 }
 
+function seciliKasayiKaydet(kasaId) {
+  aktifKasaId = kasaId;
+  if (kasaId) {
+    localStorage.setItem("secili_kasa_id", kasaId);
+    localStorage.setItem("aktif_kasa_id", kasaId);
+  }
+}
+
+function kasayaGit() {
+  const hedefKasa = aktifKasaId || localStorage.getItem("secili_kasa_id") || kendiKasaId;
+  if (hedefKasa) {
+    localStorage.setItem("secili_kasa_id", hedefKasa);
+    localStorage.setItem("aktif_kasa_id", hedefKasa);
+    window.location.href = "kasa.html?kasa_id=" + encodeURIComponent(hedefKasa);
+  } else {
+    window.location.href = "kasa.html";
+  }
+}
+
 function izlemeDurumuGuncelle(kasa) {
   const debugEl = document.getElementById("debug");
   if (!kasa) return;
 
-  // Ortak kasa veya kullanıcının kendi kasası dışında bir kasaya bakılıyorsa müdahale kapalı bilgisi ver
-  if (kasa.kasa_tipi !== "ortak") {
+  const baskaKasaMi = Boolean(kendiKasaId && kasa.id !== kendiKasaId);
+  if (baskaKasaMi) {
     debugEl.style.display = "block";
     debugEl.textContent = "👁️ İzleme Modu: '" + kasa.kasa_adi + "' kasası inceleniyor (müdahale kapalı).";
   } else {
@@ -131,6 +151,7 @@ async function kontrol() {
     }
 
     const profil = profilListesi[0];
+    kendiKasaId = profil.kasa_id || null;
     const ad = profil.display_name || profil.ekran_adi || "Kullanıcı";
     document.getElementById("hosgeldin").textContent = "Hoş geldin, " + ad;
     document.getElementById("userDot").classList.add("blue");
@@ -157,7 +178,7 @@ async function kontrol() {
           secenek.style.cssText = "padding: 12px; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.1); font-weight: bold; color: white; text-align: left;";
           secenek.onclick = async () => {
             document.getElementById("aktifKasaAdi").textContent = kasa.kasa_adi;
-            aktifKasaId = kasa.id;
+            seciliKasayiKaydet(kasa.id);
             izlemeDurumuGuncelle(kasa);
             await kasaYukle(kasa.id);
             menuAcKapa();
@@ -167,7 +188,7 @@ async function kontrol() {
 
         const ortakKasa = kasalar.find(k => k.kasa_tipi === "ortak") || kasalar[0];
         document.getElementById("aktifKasaAdi").textContent = ortakKasa.kasa_adi;
-        aktifKasaId = ortakKasa.id;
+        seciliKasayiKaydet(ortakKasa.id);
         izlemeDurumuGuncelle(ortakKasa);
         await kasaYukle(ortakKasa.id);
       } else {
@@ -177,7 +198,7 @@ async function kontrol() {
       }
     } else {
       document.getElementById("kasaGecisPaneli").style.display = "none";
-      aktifKasaId = profil.kasa_id;
+      seciliKasayiKaydet(profil.kasa_id);
 
       if (profil.kasa_id) {
         const { data: kasaBilgi } = await client
@@ -221,6 +242,8 @@ async function kasaYukle(kasaId) {
 }
 
 async function cikisYap() {
+  localStorage.removeItem("secili_kasa_id");
+  localStorage.removeItem("aktif_kasa_id");
   await client.auth.signOut();
   window.location.href = "login.html";
 }
