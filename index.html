@@ -89,6 +89,7 @@ const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 let mevcutKullanici = null;
 let aktifKasaId = null;
+let aktifKasaTipi = null;
 let kendiKasaId = null;
 
 function tlFormat(n) {
@@ -100,11 +101,19 @@ function menuAcKapa() {
   menu.style.display = menu.style.display === "none" ? "block" : "none";
 }
 
-function seciliKasayiKaydet(kasaId) {
-  aktifKasaId = kasaId;
+function seciliKasayiKaydet(kasa) {
+  const kasaId = typeof kasa === "string" ? kasa : kasa?.id;
+  const kasaTipi = typeof kasa === "object" ? (kasa?.kasa_tipi || null) : aktifKasaTipi;
+  aktifKasaId = kasaId || null;
+  aktifKasaTipi = kasaTipi;
   if (kasaId) {
     localStorage.setItem("secili_kasa_id", kasaId);
     localStorage.setItem("aktif_kasa_id", kasaId);
+  }
+  if (kasaTipi) {
+    localStorage.setItem("secili_kasa_tipi", kasaTipi);
+  } else {
+    localStorage.removeItem("secili_kasa_tipi");
   }
 }
 
@@ -123,8 +132,11 @@ function izlemeDurumuGuncelle(kasa) {
   const debugEl = document.getElementById("debug");
   if (!kasa) return;
 
-  const baskaKasaMi = Boolean(kendiKasaId && kasa.id !== kendiKasaId);
-  if (baskaKasaMi) {
+  // Ortak kasa veya kullanıcının kendi kasası her zaman müdahaleye açıktır
+  const ortakKasaMi = kasa.kasa_tipi === "ortak";
+  const kendiKasasiMi = Boolean(kendiKasaId && kasa.id === kendiKasaId);
+
+  if (!ortakKasaMi && !kendiKasasiMi) {
     debugEl.style.display = "block";
     debugEl.textContent = "👁️ İzleme Modu: '" + kasa.kasa_adi + "' kasası inceleniyor (müdahale kapalı).";
   } else {
@@ -178,9 +190,9 @@ async function kontrol() {
           secenek.style.cssText = "padding: 12px; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.1); font-weight: bold; color: white; text-align: left;";
           secenek.onclick = async () => {
             document.getElementById("aktifKasaAdi").textContent = kasa.kasa_adi;
-            seciliKasayiKaydet(kasa.id);
+            seciliKasayiKaydet(kasa);
             izlemeDurumuGuncelle(kasa);
-            await kasaYukle(kasa.id);
+            await kasaYukle(kasa);
             menuAcKapa();
           };
           menu.appendChild(secenek);
@@ -188,9 +200,9 @@ async function kontrol() {
 
         const ortakKasa = kasalar.find(k => k.kasa_tipi === "ortak") || kasalar[0];
         document.getElementById("aktifKasaAdi").textContent = ortakKasa.kasa_adi;
-        seciliKasayiKaydet(ortakKasa.id);
+        seciliKasayiKaydet(ortakKasa);
         izlemeDurumuGuncelle(ortakKasa);
-        await kasaYukle(ortakKasa.id);
+        await kasaYukle(ortakKasa);
       } else {
         document.getElementById("aktifKasaAdi").textContent = "Kasa Bulunamadı";
         document.getElementById("debug").style.display = "block";
@@ -198,18 +210,19 @@ async function kontrol() {
       }
     } else {
       document.getElementById("kasaGecisPaneli").style.display = "none";
-      seciliKasayiKaydet(profil.kasa_id);
 
       if (profil.kasa_id) {
         const { data: kasaBilgi } = await client
           .from("kasalar")
-          .select("kasa_adi")
+          .select("*")
           .eq("id", profil.kasa_id)
           .maybeSingle();
+        seciliKasayiKaydet(kasaBilgi || profil.kasa_id);
         if (kasaBilgi?.kasa_adi) {
           document.getElementById("aktifKasaAdi").textContent = kasaBilgi.kasa_adi;
         }
-        await kasaYukle(profil.kasa_id);
+        izlemeDurumuGuncelle(kasaBilgi || { id: profil.kasa_id, kasa_tipi: "kisisel", kasa_adi: "Kişisel Kasa" });
+        await kasaYukle(kasaBilgi || profil.kasa_id);
       }
     }
   } catch (e) {
@@ -218,19 +231,40 @@ async function kontrol() {
   }
 }
 
-async function kasaYukle(kasaId) {
-  const { data: ayar } = await client
+async function kasaYukle(kasaOrId) {
+  const kasaId = typeof kasaOrId === "string" ? kasaOrId : kasaOrId?.id;
+  const kasaTipi = typeof kasaOrId === "object" ? kasaOrId?.kasa_tipi : aktifKasaTipi;
+  if (!kasaId) return;
+
+  let { data: ayar } = await client
     .from("ayarlar")
     .select("*")
     .eq("kasa_id", kasaId)
     .maybeSingle();
 
+  // Ortak kasada kasa_id eşleşmezse fallback olarak ortak ayar satırını dene
+  if (!ayar && kasaTipi === "ortak") {
+    const { data: ortakAyar } = await client
+      .from("ayarlar")
+      .select("*")
+      .eq("kasa_tipi", "ortak")
+      .limit(1)
+      .maybeSingle();
+    if (ortakAyar) ayar = ortakAyar;
+  }
+
   if (ayar) {
-    document.getElementById("hedefRakam").textContent = tlFormat(ayar.hedef || 0);
-    const toplam = (ayar.ana_kasa || 0) + (ayar.yedek_kasa || 0) + (ayar.aktif_rolling || 0) + (ayar.kilitli_kar || 0);
+    const hedefDeger = parseFloat(ayar.hedef ?? ayar.hedef_kazanc ?? 0) || 0;
+    const ana = parseFloat(ayar.ana_kasa) || 0;
+    const yedek = parseFloat(ayar.yedek_kasa) || 0;
+    const aktif = parseFloat(ayar.aktif_rolling) || 0;
+    const kilit = parseFloat(ayar.kilitli_kar) || 0;
+    const toplam = ana + yedek + aktif + kilit;
+
+    document.getElementById("hedefRakam").textContent = tlFormat(hedefDeger);
     document.getElementById("toplamVarlik").textContent = tlFormat(toplam);
 
-    const yuzde = ayar.hedef > 0 ? Math.min(100, (toplam / ayar.hedef) * 100) : 0;
+    const yuzde = hedefDeger > 0 ? Math.min(100, (toplam / hedefDeger) * 100) : 0;
     document.getElementById("ilerlemeBar").style.width = yuzde + "%";
     document.getElementById("yuzde").textContent = "%" + yuzde.toFixed(2) + " tamamlandı";
   } else {
@@ -244,6 +278,7 @@ async function kasaYukle(kasaId) {
 async function cikisYap() {
   localStorage.removeItem("secili_kasa_id");
   localStorage.removeItem("aktif_kasa_id");
+  localStorage.removeItem("secili_kasa_tipi");
   await client.auth.signOut();
   window.location.href = "login.html";
 }
