@@ -38,10 +38,13 @@ button:hover{background:#22c55e}
 
 <label>🔐 Kilitli Kâr (TL)</label>
 <input type="number" id="kilitli_kar" placeholder="Örn: 0">
+
 <label>📉 Kayıp Sonrası Yeni Seri Oranı (%)</label>
 <input type="number" id="kayip_sonrasi_oran" placeholder="Örn: 25">
+
 <label>💰 Kârdan Kilitli Kâra Aktarım Oranı (%)</label>
 <input type="number" id="kar_kilitli_oran" placeholder="Örn: 25">
+
 <button onclick="kaydet()">💾 Kaydet</button>
 <button class="geri" onclick="window.location.href='index.html'">← Geri Dön</button>
 </div>
@@ -51,53 +54,123 @@ button:hover{background:#22c55e}
 const SUPABASE_URL = "https://bwdoiltmkrqfxqknedih.supabase.co";
 const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ3ZG9pbHRta3JxZnhxa25lZGloIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA0NTkzNjcsImV4cCI6MjEwNjAzNTM2N30.mx1O66LItD6Q6ED1Z75YzGXW7ijSDUVAl9R2df4Km8o";
 const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-  let kasaId = null;
+
+let kasaId = null;
+
+function gecerliUuidMi(deger) {
+  return typeof deger === "string" && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(deger);
+}
 
 async function kasaIdYukle() {
   const { data: { session } } = await client.auth.getSession();
-  if (!session) return;
-  const { data: profil } = await client.from("profiles").select("kasa_id").eq("auth_id", session.user.id).single();
-  if (profil) kasaId = profil.kasa_id;
+  if (!session) {
+    window.location.href = "login.html";
+    return false;
+  }
+
+  const { data: profil, error } = await client
+    .from("profiles")
+    .select("kasa_id")
+    .eq("auth_id", session.user.id)
+    .maybeSingle();
+
+  if (error) {
+    gosterHata("Profil okuma hatası: " + error.message);
+    return false;
+  }
+
+  if (!profil || !gecerliUuidMi(profil.kasa_id)) {
+    kasaId = null;
+    gosterHata("Hesabınıza tanımlı geçerli bir kasa bulunamadı.");
+    return false;
+  }
+
+  kasaId = profil.kasa_id;
+  return true;
 }
 
 async function yukle() {
-  await kasaIdYukle();
-  const { data: { session } } = await client.auth.getSession();
-  if (!session) { window.location.href = "login.html"; return; }
+  const tamam = await kasaIdYukle();
+  if (!tamam) return;
 
-  const { data, error } = await client.from("ayarlar").select("*").eq("kasa_id", kasaId).single();
-  if (error) { gosterHata("Yükleme hatası: " + error.message); return; }
+  const { data, error } = await client
+    .from("ayarlar")
+    .select("*")
+    .eq("kasa_id", kasaId)
+    .maybeSingle();
+
+  if (error) {
+    gosterHata("Yükleme hatası: " + error.message);
+    return;
+  }
+
   if (data) {
-    document.getElementById("hedef").value = data.hedef || 0;
-    document.getElementById("ana_kasa").value = data.ana_kasa || 0;
-    document.getElementById("yedek_kasa").value = data.yedek_kasa || 0;
-    document.getElementById("aktif_rolling").value = data.aktif_rolling || 0;
-    document.getElementById("kilitli_kar").value = data.kilitli_kar || 0;
-document.getElementById("kayip_sonrasi_oran").value = data.kayip_sonrasi_oran || 25;
-document.getElementById("kar_kilitli_oran").value = data.kar_kilitli_oran || 25;
+    document.getElementById("hedef").value = data.hedef ?? 0;
+    document.getElementById("ana_kasa").value = data.ana_kasa ?? 0;
+    document.getElementById("yedek_kasa").value = data.yedek_kasa ?? 0;
+    document.getElementById("aktif_rolling").value = data.aktif_rolling ?? 0;
+    document.getElementById("kilitli_kar").value = data.kilitli_kar ?? 0;
+    document.getElementById("kayip_sonrasi_oran").value = data.kayip_sonrasi_oran ?? 25;
+    document.getElementById("kar_kilitli_oran").value = data.kar_kilitli_oran ?? 25;
+  } else {
+    document.getElementById("hedef").value = 0;
+    document.getElementById("ana_kasa").value = 0;
+    document.getElementById("yedek_kasa").value = 0;
+    document.getElementById("aktif_rolling").value = 0;
+    document.getElementById("kilitli_kar").value = 0;
+    document.getElementById("kayip_sonrasi_oran").value = 25;
+    document.getElementById("kar_kilitli_oran").value = 25;
   }
 }
 
 async function kaydet() {
-  const hedef = parseFloat(document.getElementById("hedef").value) || 0;
-  const ana_kasa = parseFloat(document.getElementById("ana_kasa").value) || 0;
-  const yedek_kasa = parseFloat(document.getElementById("yedek_kasa").value) || 0;
-  const aktif_rolling = parseFloat(document.getElementById("aktif_rolling").value) || 0;
-  const kilitli_kar = parseFloat(document.getElementById("kilitli_kar").value) || 0;
-const kayip_sonrasi_oran = parseFloat(document.getElementById("kayip_sonrasi_oran").value) || 25;
-const kar_kilitli_oran = parseFloat(document.getElementById("kar_kilitli_oran").value) || 25;  
-  const { error } = await client.from("ayarlar").update({
-    hedef: hedef,
-    ana_kasa: ana_kasa,
-    yedek_kasa: yedek_kasa,
-    aktif_rolling: aktif_rolling,
-    kilitli_kar: kilitli_kar,
-    kayip_sonrasi_oran: kayip_sonrasi_oran,
-   kar_kilitli_oran: kar_kilitli_oran,
-    updated_at: new Date().toISOString()
-  }).eq("kasa_id", kasaId);
+  if (!gecerliUuidMi(kasaId)) {
+    const tamam = await kasaIdYukle();
+    if (!tamam) return;
+  }
 
-  if (error) { gosterHata("Kaydetme hatası: " + error.message); return; }
+  const kayitVerisi = {
+    kasa_id: kasaId,
+    hedef: parseFloat(document.getElementById("hedef").value) || 0,
+    ana_kasa: parseFloat(document.getElementById("ana_kasa").value) || 0,
+    yedek_kasa: parseFloat(document.getElementById("yedek_kasa").value) || 0,
+    aktif_rolling: parseFloat(document.getElementById("aktif_rolling").value) || 0,
+    kilitli_kar: parseFloat(document.getElementById("kilitli_kar").value) || 0,
+    kayip_sonrasi_oran: parseFloat(document.getElementById("kayip_sonrasi_oran").value) || 25,
+    kar_kilitli_oran: parseFloat(document.getElementById("kar_kilitli_oran").value) || 25,
+    updated_at: new Date().toISOString()
+  };
+
+  const { data: mevcutKayit, error: secimHatasi } = await client
+    .from("ayarlar")
+    .select("id")
+    .eq("kasa_id", kasaId)
+    .maybeSingle();
+
+  if (secimHatasi) {
+    gosterHata("Kontrol hatası: " + secimHatasi.message);
+    return;
+  }
+
+  let islemHatasi = null;
+  if (mevcutKayit) {
+    const { error } = await client
+      .from("ayarlar")
+      .update(kayitVerisi)
+      .eq("kasa_id", kasaId);
+    islemHatasi = error;
+  } else {
+    const { error } = await client
+      .from("ayarlar")
+      .insert(kayitVerisi);
+    islemHatasi = error;
+  }
+
+  if (islemHatasi) {
+    gosterHata("Kaydetme hatası: " + islemHatasi.message);
+    return;
+  }
+
   document.getElementById("mesaj").style.display = "block";
   setTimeout(() => { document.getElementById("mesaj").style.display = "none"; }, 2000);
 }
