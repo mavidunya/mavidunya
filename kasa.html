@@ -9,6 +9,8 @@ body{font-family:Arial,sans-serif;background:linear-gradient(135deg,#1e3c72,#2a5
 .kapsayici{max-width:600px;margin:0 auto}
 h1{font-size:1.6em;text-align:center;margin:10px 0}
 .geri{background:rgba(255,255,255,0.15);color:#fff;border:none;padding:8px 15px;border-radius:8px;font-size:0.9em;cursor:pointer;margin-bottom:10px}
+.kasa-baslik{text-align:center;font-size:0.95em;opacity:0.9;margin-bottom:10px}
+.izleme-uyari{background:rgba(251,191,36,0.22);border:1px solid #fbbf24;color:#fef3c7;padding:10px 12px;border-radius:10px;margin-bottom:12px;font-size:0.9em;display:none}
 .bolum{background:rgba(255,255,255,0.08);padding:15px;border-radius:15px;margin-bottom:15px}
 .bolum h2{font-size:1.1em;margin:0 0 12px 0;opacity:0.95}
 .kasa-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
@@ -19,14 +21,15 @@ h1{font-size:1.6em;text-align:center;margin:10px 0}
 label{display:block;font-size:0.85em;opacity:0.85;margin:8px 0 4px 0}
 input,select{width:100%;padding:10px;border-radius:8px;border:none;font-size:1em;box-sizing:border-box;background:rgba(255,255,255,0.95);color:#000}
 .buton{width:100%;padding:12px;border-radius:10px;border:none;font-weight:bold;font-size:1em;cursor:pointer;margin-top:10px}
+.buton:disabled{opacity:0.45;cursor:not-allowed}
 .btn-yesil{background:#4ade80;color:#064e3b}
-.btn-yesil:hover{background:#22c55e}
+.btn-yesil:hover:not(:disabled){background:#22c55e}
 .btn-mavi{background:#3b82f6;color:#fff}
-.btn-mavi:hover{background:#2563eb}
+.btn-mavi:hover:not(:disabled){background:#2563eb}
 .btn-kirmizi{background:#ef4444;color:#fff}
-.btn-kirmizi:hover{background:#dc2626}
+.btn-kirmizi:hover:not(:disabled){background:#dc2626}
 .btn-gri{background:#64748b;color:#fff}
-.btn-gri:hover{background:#475569}
+.btn-gri:hover:not(:disabled){background:#475569}
 .islem{background:rgba(255,255,255,0.06);padding:10px;border-radius:10px;margin-bottom:8px;font-size:0.85em}
 .islem .satir1{display:flex;justify-content:space-between;margin-bottom:4px}
 .islem .mac{font-weight:bold}
@@ -34,6 +37,7 @@ input,select{width:100%;padding:10px;border-radius:8px;border:none;font-size:1em
 .durum-bekliyor{background:#fbbf24;color:#000}
 .durum-kazandi{background:#4ade80;color:#064e3b}
 .durum-kaybetti{background:#ef4444;color:#fff}
+.durum-transfer{background:#60a5fa;color:#0f172a}
 .aktif-bahis{background:rgba(251,191,36,0.2);border:1px solid #fbbf24;padding:15px;border-radius:12px;margin-bottom:12px}
 .aktif-bahis .mac{font-size:1.1em;font-weight:bold;margin-bottom:5px}
 .hata{background:#fbbf24;color:#000;padding:10px;border-radius:10px;margin-top:10px;font-size:0.85em;display:none;word-break:break-word}
@@ -47,6 +51,8 @@ input,select{width:100%;padding:10px;border-radius:8px;border:none;font-size:1em
 
 <button class="geri" onclick="window.location.href='index.html'">← Ana Sayfa</button>
 <h1>💰 Kasa</h1>
+<div id="kasaBaslik" class="kasa-baslik"></div>
+<div id="izlemeUyari" class="izleme-uyari">👁️ İzleme Modu: Bu kasa yalnızca görüntüleme amaçlı açıldı; işlem yapılamaz.</div>
 <div id="debug" class="hata"></div>
 
 <!-- SERİ BİLGİSİ -->
@@ -70,7 +76,7 @@ input,select{width:100%;padding:10px;border-radius:8px;border:none;font-size:1em
 </div>
 
 <!-- TRANSFER -->
-<div class="bolum">
+<div class="bolum" id="transferBolum">
 <h2>💸 Transfer</h2>
 <label>Nereden</label>
 <select id="transferNereden">
@@ -88,19 +94,19 @@ input,select{width:100%;padding:10px;border-radius:8px;border:none;font-size:1em
 </select>
 <label>Miktar (TL)</label>
 <input type="number" id="transferMiktar" placeholder="Örn: 1000">
-<button class="buton btn-mavi" onclick="transferYap()">💸 Transfer Et</button>
+<button class="buton btn-mavi islem-butonu" onclick="transferYap()">💸 Transfer Et</button>
 </div>
 
 <!-- AKTİF BAHİS -->
 <div class="bolum" id="aktifBahisBolum" style="display:none">
 <h2>🎯 Aktif Bahis</h2>
 <div class="aktif-bahis" id="aktifBahisKart"></div>
-<button class="buton btn-yesil" onclick="bahisSonuc('kazandi')">✅ Kazandı</button>
-<button class="buton btn-kirmizi" onclick="bahisSonuc('kaybetti')">❌ Kaybetti</button>
+<button class="buton btn-yesil islem-butonu" onclick="bahisSonuc('kazandi')">✅ Kazandı</button>
+<button class="buton btn-kirmizi islem-butonu" onclick="bahisSonuc('kaybetti')">❌ Kaybetti</button>
 </div>
 
 <!-- YENİ BAHİS -->
-<div class="bolum">
+<div class="bolum" id="yeniBahisBolum">
 <h2>➕ Yeni Bahis Ekle</h2>
 <label>Ev Sahibi Takım</label>
 <input type="text" id="yeniEvSahibi" placeholder="Örn: Juventus">
@@ -147,7 +153,7 @@ input,select{width:100%;padding:10px;border-radius:8px;border:none;font-size:1em
 <option value="aktif_rolling">⚡ Aktif Rolling'den</option>
 <option value="ana_kasa">💰 Ana Kasa'dan</option>
 </select>
-<button class="buton btn-mavi" onclick="bahisEkle()">💾 Bahsi Kaydet</button>
+<button class="buton btn-mavi islem-butonu" onclick="bahisEkle()">💾 Bahsi Kaydet</button>
 </div>
 
 <!-- SERİYİ TAMAMLA -->
@@ -155,7 +161,7 @@ input,select{width:100%;padding:10px;border-radius:8px;border:none;font-size:1em
 <h2>🎯 Seriyi Tamamla</h2>
 <p style="opacity:0.9;margin:10px 0">Aktif Rolling'deki tüm para ana kasaya aktarılacak. Onaylıyor musunuz?</p>
 <div id="seriOnayAlani">
-<button class="buton btn-yesil" onclick="seriTamamlaOnay()">✅ Evet, Tamamla</button>
+<button class="buton btn-yesil islem-butonu" onclick="seriTamamlaOnay()">✅ Evet, Tamamla</button>
 <button class="buton btn-gri" onclick="seriTamamlaIptal()">❌ Hayır, Vazgeç</button>
 </div>
 </div>
@@ -176,16 +182,29 @@ const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
 const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 let aktifBahis = null;
-  let kasaId = null;
-
-async function kasaIdYukle() {
-  const { data: { session } } = await client.auth.getSession();
-  if (!session) return;
-  const { data: profil } = await client.from("profiles").select("kasa_id").eq("auth_id", session.user.id).single();
-  if (profil) kasaId = profil.kasa_id;
-}
+let kasaId = null;
+let kendiKasaId = null;
+let kullaniciRol = null;
+let izlemeModu = false;
 let mevcutKullanici = null;
 let aktifSeri = null;
+
+function gecerliUuidMi(deger) {
+  return typeof deger === "string" && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(deger);
+}
+
+function seciliKasaIdAl() {
+  const params = new URLSearchParams(window.location.search);
+  const urlKasa = params.get("kasa_id");
+  if (gecerliUuidMi(urlKasa)) return urlKasa;
+
+  const adayAnahtarlar = ["secili_kasa_id", "aktif_kasa_id", "mavidunya_kasa_id", "selected_kasa_id"];
+  for (const anahtar of adayAnahtarlar) {
+    const deger = localStorage.getItem(anahtar);
+    if (gecerliUuidMi(deger)) return deger;
+  }
+  return null;
+}
 
 function tlFormat(n) {
   return new Intl.NumberFormat('tr-TR', {maximumFractionDigits: 2}).format(n) + " TL";
@@ -201,11 +220,62 @@ function hataGoster(m) {
 function tarihFormat(t) {
   return new Date(t).toLocaleString('tr-TR', {day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
 }
+
+function müdahaleKilidiniGuncelle() {
+  document.getElementById("izlemeUyari").style.display = izlemeModu ? "block" : "none";
+  document.querySelectorAll(".islem-butonu").forEach(btn => {
+    btn.disabled = izlemeModu;
+  });
+}
+
+async function kasaIdYukle() {
+  const { data: { session } } = await client.auth.getSession();
+  if (!session) return false;
+  mevcutKullanici = session.user.id;
+
+  const { data: profil } = await client
+    .from("profiles")
+    .select("kasa_id, rol")
+    .eq("auth_id", session.user.id)
+    .maybeSingle();
+
+  kendiKasaId = profil && gecerliUuidMi(profil.kasa_id) ? profil.kasa_id : null;
+  kullaniciRol = profil ? profil.rol : null;
+
+  const seciliKasa = seciliKasaIdAl();
+  kasaId = seciliKasa || kendiKasaId;
+
+  if (!gecerliUuidMi(kasaId)) {
+    kasaId = null;
+    hataGoster("Geçerli bir kasa seçilmemiş veya tanımlanmamış.");
+    return false;
+  }
+
+  izlemeModu = Boolean(kendiKasaId && kasaId !== kendiKasaId);
+
+  const { data: kasaKayit } = await client
+    .from("kasalar")
+    .select("kasa_adi, kasa_tipi")
+    .eq("id", kasaId)
+    .maybeSingle();
+
+  if (kasaKayit && kasaKayit.kasa_adi) {
+    document.getElementById("kasaBaslik").textContent = "Aktif Kasa: " + kasaKayit.kasa_adi;
+  } else {
+    document.getElementById("kasaBaslik").textContent = "";
+  }
+
+  müdahaleKilidiniGuncelle();
+  return true;
+}
+
 async function kontrol() {
-  await kasaIdYukle();
   const { data: { session } } = await client.auth.getSession();
   if (!session) { window.location.href = "login.html"; return; }
-  mevcutKullanici = session.user.id;
+
+  const tamam = await kasaIdYukle();
+  if (!tamam) return;
+
   await kasaYukle();
   await seriYukle();
   await aktifBahisYukle();
@@ -213,45 +283,53 @@ async function kontrol() {
 }
 
 async function kasaYukle() {
-  const { data: ayar } = await client.from("ayarlar").select("*").eq("kasa_id", kasaId).single();
-  if (ayar) {
-    const ana = parseFloat(ayar.ana_kasa) || 0;
-    const yedek = parseFloat(ayar.yedek_kasa) || 0;
-    const aktif = parseFloat(ayar.aktif_rolling) || 0;
-    const kilit = parseFloat(ayar.kilitli_kar) || 0;
+  if (!kasaId) return;
+  const { data: ayar } = await client
+    .from("ayarlar")
+    .select("*")
+    .eq("kasa_id", kasaId)
+    .maybeSingle();
 
-    document.getElementById("anaKasa").textContent = tlFormat(ana);
-    document.getElementById("yedekKasa").textContent = tlFormat(yedek);
-    document.getElementById("aktifRolling").textContent = tlFormat(aktif);
-    document.getElementById("kilitliKar").textContent = tlFormat(kilit);
+  const ana = ayar ? (parseFloat(ayar.ana_kasa) || 0) : 0;
+  const yedek = ayar ? (parseFloat(ayar.yedek_kasa) || 0) : 0;
+  const aktif = ayar ? (parseFloat(ayar.aktif_rolling) || 0) : 0;
+  const kilit = ayar ? (parseFloat(ayar.kilitli_kar) || 0) : 0;
 
-    const toplam = ana + yedek + aktif + kilit;
-    document.getElementById("toplamVarlik").textContent = tlFormat(toplam);
-  }
+  document.getElementById("anaKasa").textContent = tlFormat(ana);
+  document.getElementById("yedekKasa").textContent = tlFormat(yedek);
+  document.getElementById("aktifRolling").textContent = tlFormat(aktif);
+  document.getElementById("kilitliKar").textContent = tlFormat(kilit);
+
+  const toplam = ana + yedek + aktif + kilit;
+  document.getElementById("toplamVarlik").textContent = tlFormat(toplam);
 }
 
 async function seriYukle() {
+  if (!kasaId) return;
   const { data } = await client.from("bankroll")
     .select("seri_no, adim_no, bahis_durumu")
+    .eq("kasa_id", kasaId)
     .eq("seri_durumu", "devam_ediyor")
     .order("created_at", { ascending: false })
     .limit(1);
 
   if (data && data.length > 0) {
     aktifSeri = data[0];
-    document.getElementById("seriBilgi").textContent = 
+    document.getElementById("seriBilgi").textContent =
       "Seri " + aktifSeri.seri_no + " — Adım " + (aktifSeri.adim_no || 1);
- document.getElementById("seriTamamlaBolum").style.display = "block";
+    document.getElementById("seriTamamlaBolum").style.display = "block";
   } else {
     aktifSeri = null;
     document.getElementById("seriBilgi").textContent = "Henüz seri başlamadı. Yeni bahis ekleyin.";
-document.getElementById("seriTamamlaBolum").style.display = "none";
+    document.getElementById("seriTamamlaBolum").style.display = "none";
   }
 }
 
 async function aktifBahisYukle() {
+  if (!kasaId) return;
   const { data, error } = await client.from("bankroll")
     .select("*")
+    .eq("kasa_id", kasaId)
     .eq("bahis_durumu", "bekliyor")
     .order("created_at", { ascending: false })
     .limit(1);
@@ -273,8 +351,10 @@ async function aktifBahisYukle() {
 }
 
 async function gecmisYukle() {
+  if (!kasaId) return;
   const { data, error } = await client.from("bankroll")
     .select("*")
+    .eq("kasa_id", kasaId)
     .order("created_at", { ascending: false })
     .limit(20);
 
@@ -288,7 +368,7 @@ async function gecmisYukle() {
 
   const liste = document.getElementById("gecmisListe");
   if (!data || data.length === 0) {
-    liste.innerHTML = '<div class="bos">Henüz işlem yok.</div>';
+    liste.innerHTML = '<div class="bos">Bu kasada henüz işlem yok.</div>';
     return;
   }
 
@@ -306,7 +386,7 @@ async function gecmisYukle() {
       const renk = p.avatar_color === "blue" ? "#3b82f6" : (p.avatar_color === "green" ? "#22c55e" : "#888");
       kimHtml = '<div style="display:flex;align-items:center;gap:6px;margin-top:4px;font-size:0.85em">' +
         '<span style="display:inline-block;width:12px;height:12px;border-radius:50%;background:' + renk + ';border:2px solid #fff"></span>' +
-        '<span>' + p.display_name + '</span>' +
+        '<span>' + (p.display_name || "Kullanıcı") + '</span>' +
         '</div>';
     }
 
@@ -320,6 +400,9 @@ async function gecmisYukle() {
 }
 
 async function transferYap() {
+  if (izlemeModu) { hataGoster("İzleme modundayken işlem yapılamaz."); return; }
+  if (!kasaId) { hataGoster("Geçerli kasa bulunamadı."); return; }
+
   const nereden = document.getElementById("transferNereden").value;
   const nereye = document.getElementById("transferNereye").value;
   const miktar = parseFloat(document.getElementById("transferMiktar").value);
@@ -343,7 +426,7 @@ async function transferYap() {
   guncelleme[nereye] = yeniNereye;
   guncelleme.updated_at = new Date().toISOString();
 
-  const { error: uErr } = await client.from("ayarlar").update(guncelleme).eq("id", 1);
+  const { error: uErr } = await client.from("ayarlar").update(guncelleme).eq("kasa_id", kasaId);
   if (uErr) { hataGoster("Transfer hatası: " + uErr.message); return; }
 
   await client.from("bankroll").insert({
@@ -364,7 +447,7 @@ async function transferYap() {
   await gecmisYukle();
 }
 
-  const MARKET_LISTESI = {
+const MARKET_LISTESI = {
   "mac_sonucu": ["Maç Sonucu (1X2)", "Çifte Şans", "Çifte Şans ve Toplam Alt/Üst", "Handikap", "Herhangi Bir Yarıyı Kazanır", "Geriye Düşüp Berabere Biter", "Geriden Gelip Kazanır"],
   "gol": ["Toplam Gol Üst/Alt", "KG Var/Yok", "Toplam Gol Aralığı", "Ev Gol Aralığı", "Dep Gol Aralığı", "Ev Gol Yer", "Dep Gol Yer", "Gol Yemeden Kazanır"],
   "ilk_ikinci_yari": ["İlk Yarı Sonucu", "İkinci Yarı Sonucu", "Ev İlk Yarı 0.5", "Ev İlk Yarı 1.5", "Ev İlk Yarı 2.5", "Dep İlk Yarı 0.5", "Dep İlk Yarı 1.5", "Dep İlk Yarı 2.5", "Ev İkinci Yarı 0.5", "Ev İkinci Yarı 1.5", "Ev İkinci Yarı 2.5", "Dep İkinci Yarı 0.5", "Dep İkinci Yarı 1.5", "Dep İkinci Yarı 2.5", "Her İki Yarıda Gol", "Her İki Yarıda 1.5 Üst"],
@@ -396,7 +479,8 @@ function altMarketGuncelle() {
     altMarketSelect.appendChild(opt);
   });
 }
-  function yonGuncelle() {
+
+function yonGuncelle() {
   const secilenAlt = document.getElementById("yeniAltMarket").value;
   const yonSelect = document.getElementById("yeniYon");
   yonSelect.innerHTML = "";
@@ -411,19 +495,23 @@ function altMarketGuncelle() {
     yonSelect.innerHTML = '<option value="üst">Üst</option><option value="alt">Alt</option><option value="yok">Yok (sabit bahis)</option>';
   }
 }
+
 async function bahisEkle() {
+  if (izlemeModu) { hataGoster("İzleme modundayken bahis eklenemez."); return; }
+  if (!kasaId) { hataGoster("Geçerli kasa bulunamadı."); return; }
+
   const evSahibi = document.getElementById("yeniEvSahibi").value.trim();
-const deplasman = document.getElementById("yeniDeplasman").value.trim();
-const mac = evSahibi + " - " + deplasman;
-const kategori = document.getElementById("yeniKategori").value;
-const altMarket = document.getElementById("yeniAltMarket").value;
-const deger = document.getElementById("yeniDeger").value.trim();
-const yon = document.getElementById("yeniYon").value;
-const marketDetay = (deger && yon !== "yok") ? (deger + " " + yon) : (deger || "");
-const market = altMarket + (marketDetay ? " — " + marketDetay : "");
-const oran = parseFloat(document.getElementById("yeniOran").value);
-const tutar = parseFloat(document.getElementById("yeniTutar").value);
-const kaynak = document.getElementById("yeniKaynak").value;
+  const deplasman = document.getElementById("yeniDeplasman").value.trim();
+  const mac = evSahibi + " - " + deplasman;
+  const kategori = document.getElementById("yeniKategori").value;
+  const altMarket = document.getElementById("yeniAltMarket").value;
+  const deger = document.getElementById("yeniDeger").value.trim();
+  const yon = document.getElementById("yeniYon").value;
+  const marketDetay = (deger && yon !== "yok") ? (deger + " " + yon) : (deger || "");
+  const market = altMarket + (marketDetay ? " — " + marketDetay : "");
+  const oran = parseFloat(document.getElementById("yeniOran").value);
+  const tutar = parseFloat(document.getElementById("yeniTutar").value);
+  const kaynak = document.getElementById("yeniKaynak").value;
 
   if (!evSahibi || !deplasman || !kategori || !altMarket || !oran || !tutar) { hataGoster("Lütfen tüm alanları doldurun (takımlar, kategori ve alt market dahil)."); return; }
 
@@ -436,37 +524,39 @@ const kaynak = document.getElementById("yeniKaynak").value;
   let seriNo = 1;
   let adimNo = 1;
 
-  const { data: aktifSeri } = await client.from("bankroll")
-  .select("seri_no, adim_no")
-  .eq("seri_durumu", "devam_ediyor")
-  .order("adim_no", { ascending: false })
-  .limit(1);
-
-if (aktifSeri && aktifSeri.length > 0) {
-  seriNo = aktifSeri[0].seri_no;
-  adimNo = (aktifSeri[0].adim_no || 0) + 1;
-} else {
-  const { data: sonSeri } = await client.from("bankroll")
-    .select("seri_no")
-    .order("seri_no", { ascending: false })
+  const { data: aktifSeriKayit } = await client.from("bankroll")
+    .select("seri_no, adim_no")
+    .eq("kasa_id", kasaId)
+    .eq("seri_durumu", "devam_ediyor")
+    .order("adim_no", { ascending: false })
     .limit(1);
-  seriNo = (sonSeri && sonSeri.length > 0) ? (sonSeri[0].seri_no || 0) + 1 : 1;
-  adimNo = 1;
-}
+
+  if (aktifSeriKayit && aktifSeriKayit.length > 0) {
+    seriNo = aktifSeriKayit[0].seri_no;
+    adimNo = (aktifSeriKayit[0].adim_no || 0) + 1;
+  } else {
+    const { data: sonSeri } = await client.from("bankroll")
+      .select("seri_no")
+      .eq("kasa_id", kasaId)
+      .order("seri_no", { ascending: false })
+      .limit(1);
+    seriNo = (sonSeri && sonSeri.length > 0) ? (sonSeri[0].seri_no || 0) + 1 : 1;
+    adimNo = 1;
+  }
 
   const yeniKaynak = eskiKaynak - tutar;
   const guncelleme = {};
   guncelleme[kaynak] = yeniKaynak;
   guncelleme.updated_at = new Date().toISOString();
 
-  const { error: uErr } = await client.from("ayarlar").update(guncelleme).eq("id", 1);
+  const { error: uErr } = await client.from("ayarlar").update(guncelleme).eq("kasa_id", kasaId);
   if (uErr) { hataGoster("Kasa güncelleme hatası: " + uErr.message); return; }
 
   const { error: bErr } = await client.from("bankroll").insert({
     mac: mac,
-   ev_sahibi: evSahibi,
-deplasman: deplasman,
-market_detay: marketDetay,
+    ev_sahibi: evSahibi,
+    deplasman: deplasman,
+    market_detay: marketDetay,
     market: market,
     market_kategori: kategori,
     oran: oran,
@@ -486,9 +576,9 @@ market_detay: marketDetay,
   if (bErr) { hataGoster("Bahis ekleme: " + bErr.message); return; }
 
   document.getElementById("yeniEvSahibi").value = "";
-document.getElementById("yeniDeplasman").value = "";
-document.getElementById("yeniDeger").value = "";
-document.getElementById("yeniYon").value = "üst";
+  document.getElementById("yeniDeplasman").value = "";
+  document.getElementById("yeniDeger").value = "";
+  document.getElementById("yeniYon").value = "üst";
   document.getElementById("yeniOran").value = "";
   document.getElementById("yeniTutar").value = "";
 
@@ -496,9 +586,11 @@ document.getElementById("yeniYon").value = "üst";
   await seriYukle();
   await aktifBahisYukle();
   await gecmisYukle();
-}  
+}
+
 async function bahisSonuc(sonuc) {
-  if (!aktifBahis) return;
+  if (izlemeModu) { hataGoster("İzleme modundayken bahis sonuçlandırılamaz."); return; }
+  if (!aktifBahis || !kasaId) return;
 
   const oran = parseFloat(aktifBahis.oran) || 1;
   const tutar = Math.abs(parseFloat(aktifBahis.amount)) || 0;
@@ -508,7 +600,7 @@ async function bahisSonuc(sonuc) {
   const { error: e1 } = await client.from("bankroll").update({
     bahis_durumu: sonuc,
     balance_after: kazanc
-  }).eq("id", aktifBahis.id);
+  }).eq("id", aktifBahis.id).eq("kasa_id", kasaId);
 
   if (e1) { hataGoster("Sonuç güncelleme: " + e1.message); return; }
 
@@ -535,12 +627,10 @@ async function bahisSonuc(sonuc) {
       aktifRolling = yeniAktif;
       anaKasa = anaKasa - yeniAktif;
       await client.from("bankroll").update({
-  seri_durumu: "kirildi"
-}).eq("seri_no", aktifBahis.seri_no).eq("seri_durumu", "devam_ediyor");
+        seri_durumu: "kirildi"
+      }).eq("kasa_id", kasaId).eq("seri_no", aktifBahis.seri_no).eq("seri_durumu", "devam_ediyor");
     }
   }
-
-  
 
   await client.from("ayarlar").update({
     ana_kasa: anaKasa,
@@ -548,7 +638,7 @@ async function bahisSonuc(sonuc) {
     kilitli_kar: kilitliKar,
     kilitli_referans: referans,
     updated_at: new Date().toISOString()
-  }).eq("id", 1);
+  }).eq("kasa_id", kasaId);
 
   await kasaYukle();
   await seriYukle();
@@ -557,7 +647,8 @@ async function bahisSonuc(sonuc) {
 }
 
 async function seriTamamlaOnay() {
-  if (!aktifSeri) { hataGoster("Aktif seri yok."); return; }
+  if (izlemeModu) { hataGoster("İzleme modundayken seri tamamlanamaz."); return; }
+  if (!aktifSeri || !kasaId) { hataGoster("Aktif seri yok."); return; }
 
   const { data: ayar } = await client.from("ayarlar").select("*").eq("kasa_id", kasaId).single();
   if (!ayar) { hataGoster("Ayar okunamadı."); return; }
@@ -586,7 +677,7 @@ async function seriTamamlaOnay() {
 
   await client.from("bankroll").update({
     seri_durumu: "tamamlandi"
-  }).eq("seri_no", aktifSeri.seri_no).eq("seri_durumu", "devam_ediyor");
+  }).eq("kasa_id", kasaId).eq("seri_no", aktifSeri.seri_no).eq("seri_durumu", "devam_ediyor");
 
   await client.from("ayarlar").update({
     ana_kasa: anaKasa,
@@ -594,7 +685,7 @@ async function seriTamamlaOnay() {
     kilitli_kar: kilitliKar,
     kilitli_referans: referans,
     updated_at: new Date().toISOString()
-  }).eq("id", 1);
+  }).eq("kasa_id", kasaId);
 
   await kasaYukle();
   await seriYukle();
@@ -605,6 +696,7 @@ async function seriTamamlaOnay() {
 function seriTamamlaIptal() {
   document.getElementById("seriTamamlaBolum").style.display = "none";
 }
+
 kontrol();
 </script>
 </body>
